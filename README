@@ -1,0 +1,20 @@
+--------------------      C-- Compiler  ------------------------------
+
+This is a compiler of a C-like programming language ,so called "C--".
+It is coded in C using the GNU Flex and Bison. 
+
+------------------------Test Environment------------------------------
+GNU Linux Release: Ubuntu 10.04, kernel version 2.6.35
+GCC version 4.4.3
+GNU Flex version 2.5.35
+GNU Bison version 2.4.1 
+
+------------------------Try it yourself ------------------------------
+You can download the files, compile the code and run it on your Linux.
+U just need to type in the "make" bash script.
+
+
+
+
+Rebornix 2012
+To be continued.
