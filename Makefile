@@ -7,4 +7,4 @@ syntax.tab.c: syntax.y
 lex.yy.c: lexical.l
 	flex lexical.l
 clean: 
-	rm lex.yy.c  syntax.tab.c parser
+	rm lex.yy.c  syntax.tab.c parser syntax.tab.h
