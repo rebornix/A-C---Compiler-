@@ -61,7 +61,7 @@ int yylineno = 1;
 "Else"    { yylval.node = initial((int)yylineno, (char*)yytext, "ELSE");return ELSE; }
 "while"   { yylval.node = initial((int)yylineno, (char*)yytext, "WHILE");return WHILE; }
 {Identity}    { yylval.node = initial((int)yylineno, (char*)yytext, "ID");return ID; }
-.       { printf("Error ID at line: %d Mysterious charater: %s\n", yylineno, yytext);  } 
+.       { printf("Error type 1 at line: %d Mysterious charater: %s\n", yylineno, yytext);  } 
 
 %%
 struct TreeNode 

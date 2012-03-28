@@ -1,5 +1,6 @@
 %{
 #include<stdio.h>
+#include<ctype.h>
 struct TreeNode {
     int ival;
     double dval;
@@ -13,7 +14,7 @@ struct TreeNode *head;
 void traverse(struct TreeNode *head, int depth);
 struct TreeNode* bindSibling(struct TreeNode * left, struct TreeNode * right);
 struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child);
-
+int errorJudge = 0;
 %}
 
 %union {
@@ -52,7 +53,8 @@ Program     :   ExtDefList  {   struct TreeNode *temp;
                                 temp = bindSibling(&$1, NULL);
                                 $$.token = "Program";
                                 temp = bindParent(&$$, temp);
-                                traverse(temp, 0);
+                                if(errorJudge == 0)
+                                    traverse(temp, 0);
                                 }
             ;
 ExtDefList  :   ExtDef  ExtDefList { struct TreeNode *temp; 
@@ -60,10 +62,19 @@ ExtDefList  :   ExtDef  ExtDefList { struct TreeNode *temp;
                                      temp = bindSibling(&$1, temp);
                                      $$.token = "ExtDefList";
                                      bindParent(&$$, temp);} 
-            |   /* empty */  {$$.token = NULL;}
+            |   /* empty */  { $$.token = NULL; $$.nextSibling = NULL;  $$.firstChild = NULL; }
             ;
-ExtDef      :   Specifier   ExtDecList  SEMI   
-            |   Specifier   SEMI 
+ExtDef      :   Specifier   ExtDecList  SEMI{struct TreeNode *temp; 
+                                            temp = bindSibling(&$3, NULL);
+                                            temp = bindSibling(&$2, temp);
+                                            temp = bindSibling(&$1, temp);
+                                            $$.token = "ExtDef";
+                                            bindParent(&$$, temp);}   
+            |   Specifier   SEMI {struct TreeNode *temp; 
+                                            temp = bindSibling(&$2, NULL);
+                                            temp = bindSibling(&$1, temp);
+                                            $$.token = "ExtDef";
+                                            bindParent(&$$, temp);}
             |   Specifier   FunDec  CompSt {struct TreeNode *temp; 
                                             temp = bindSibling(&$3, NULL);
                                             temp = bindSibling(&$2, temp);
@@ -71,8 +82,16 @@ ExtDef      :   Specifier   ExtDecList  SEMI
                                             $$.token = "ExtDef";
                                             bindParent(&$$, temp);}
             ;
-ExtDecList  :   VarDec
-            |   VarDec  COMMA   ExtDecList
+ExtDecList  :   VarDec{ struct TreeNode *temp;
+                     temp = bindSibling(&$1, NULL);
+                     $$.token = "ExtDecList"; 
+                     bindParent(&$$, temp);}
+            |   VarDec  COMMA   ExtDecList{struct TreeNode *temp; 
+                                            temp = bindSibling(&$3, NULL);
+                                            temp = bindSibling(&$2, temp);
+                                            temp = bindSibling(&$1, temp);
+                                            $$.token = "ExtDecList";
+                                            bindParent(&$$, temp);}
             ;
 
 Specifier   :   TYPE   { struct TreeNode *temp;
@@ -80,24 +99,57 @@ Specifier   :   TYPE   { struct TreeNode *temp;
                          temp->firstChild = NULL;
                          $$.token = "Specifier"; 
                          bindParent(&$$, temp);}
-            |   StructSpecifier  { }
+            |   StructSpecifier  { struct TreeNode *temp;
+                     temp = bindSibling(&$1, NULL);
+                     $$.token = "Specifier"; 
+                     bindParent(&$$, temp);}
             ;
-StructSpecifier :   STRUCT  OptTag  LC  DefList RC { }
-                |   STRUCT  Tag{ }
+StructSpecifier :   STRUCT  OptTag  LC  DefList RC {struct TreeNode *temp; 
+                                            temp = bindSibling(&$5, NULL);
+                                            temp = bindSibling(&$4, temp);
+                                            temp = bindSibling(&$3, temp);
+                                            temp = bindSibling(&$2, temp);
+                                            temp = bindSibling(&$1, temp);
+                                            $$.token = "StructSpecifier";
+                                            bindParent(&$$, temp);}
+                |   STRUCT  Tag{ struct TreeNode *temp;
+                            temp = bindSibling(&$2, NULL);
+                            temp = bindSibling(&$1, temp);
+                            $$.token = "StructSpecifier";
+                            bindParent(&$$, temp);
+                            } 
                 ;
-OptTag      :   ID { }
-            |   /* empty */
+OptTag      :   ID { struct TreeNode *temp;
+                     temp = bindSibling(&$1, NULL);
+                     $$.token = "OptTag"; 
+                     bindParent(&$$, temp);}
+            |   /* empty */{ $$.token = NULL; $$.nextSibling = NULL;  $$.firstChild = NULL; }
             ;
-Tag         :   ID
+Tag         :   ID{ struct TreeNode *temp;
+                     temp = bindSibling(&$1, NULL);
+                     $$.token = "Tag"; 
+                     bindParent(&$$, temp);}
             ;
 
 VarDec      :   ID { struct TreeNode *temp;
                      temp = bindSibling(&$1, NULL);
                      $$.token = "VarDec"; 
                      bindParent(&$$, temp);}
-            |   VarDec  LB  INT RB
+            |   VarDec  LB  INT RB{  struct TreeNode *temp;
+                                             temp = bindSibling(&$4, NULL);
+                                             temp = bindSibling(&$3, temp);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "VarDec";
+                                             bindParent(&$$, temp); }
             ;
-FunDec      :   ID  LP  VarList RP
+FunDec      :   ID  LP  VarList RP{  struct TreeNode *temp;
+                                             temp = bindSibling(&$4, NULL);
+                                             temp = bindSibling(&$3, temp);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "FunDec";
+                                             bindParent(&$$, temp); }
             |   ID  LP  RP  { struct TreeNode *temp;
                               temp = bindSibling(&$3, NULL);
                               temp = bindSibling(&$2, temp);
@@ -105,10 +157,22 @@ FunDec      :   ID  LP  VarList RP
                               $$.token = "FunDec";
                               bindParent(&$$, temp);}
             ;
-VarList     :   ParamDec    COMMA   VarList
-            |   ParamDec
+VarList     :   ParamDec    COMMA   VarList{ struct TreeNode *temp;
+                              temp = bindSibling(&$3, NULL);
+                              temp = bindSibling(&$2, temp);
+                              temp = bindSibling(&$1, temp);
+                              $$.token = "VarList";
+                              bindParent(&$$, temp);}
+            |   ParamDec{ struct TreeNode *temp;
+                         temp = bindSibling(&$1, NULL);
+                         $$.token = "VarList"; 
+                         bindParent(&$$, temp);}
             ;
-ParamDec    :   Specifier   VarDec
+ParamDec    :   Specifier   VarDec{ struct TreeNode *temp;
+                                    temp = bindSibling(&$2, NULL);
+                                    temp = bindSibling(&$1, temp);
+                                    $$.token = "ParamDec";
+                                    bindParent(&$$, temp);}
             ;
 
 CompSt      :   LC  DefList StmtList    RC {  struct TreeNode *temp;
@@ -118,26 +182,68 @@ CompSt      :   LC  DefList StmtList    RC {  struct TreeNode *temp;
                                              temp = bindSibling(&$1, temp);
                                              $$.token = "CompSt";
                                              bindParent(&$$, temp); }
+            
             ;
-StmtList    :   Stmt    StmtList
-            |   
+StmtList    :   Stmt    StmtList { struct TreeNode *temp;
+                                    temp = bindSibling(&$2, NULL);
+                                    temp = bindSibling(&$1, temp);// fuck: temp = bindSibling(&$1, &$1);
+                                    $$.token = "StmtList";
+                                    bindParent(&$$, temp);}
+            |   { $$.token = NULL; $$.nextSibling = NULL;  $$.firstChild = NULL; }
             ;
-Stmt        :   Exp SEMI
-            |   CompSt
-            |   RETURN  Exp SEMI
-            |   IF  LP  Exp RP  Stmt  %prec LOWER_THAN_ELSE
-            |   IF  LP  Exp RP  Stmt    ELSE    Stmt
-            |   WHILE   LP  Exp RP  Stmt
+Stmt        :   Exp SEMI { struct TreeNode *temp;
+                            temp = bindSibling(&$2, NULL);
+                            temp = bindSibling(&$1, temp);
+                            $$.token = "Stmt";
+                            bindParent(&$$, temp);
+                            }
+            |   CompSt{ struct TreeNode *temp;
+                            temp = bindSibling(&$1, NULL);
+                            $$.token = "Stmt";
+                            bindParent(&$$, temp);
+                            }
+            |   RETURN  Exp SEMI{  struct TreeNode *temp;
+                                             temp = bindSibling(&$3, NULL);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "Stmt";
+                                             bindParent(&$$, temp); }
+            |   IF  LP  Exp RP  Stmt  %prec LOWER_THAN_ELSE{  struct TreeNode *temp;
+                                             temp = bindSibling(&$4, NULL);
+                                             temp = bindSibling(&$3, temp);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "Stmt";
+                                             bindParent(&$$, temp); }
+            |   IF  LP  Exp RP  Stmt    ELSE    Stmt{  struct TreeNode *temp;
+                                             temp = bindSibling(&$7, NULL);
+                                             temp = bindSibling(&$6, temp);
+                                             temp = bindSibling(&$5, temp);
+                                             temp = bindSibling(&$4, temp);
+                                             temp = bindSibling(&$3, temp);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "Stmt";
+                                             bindParent(&$$, temp); }
+            |   WHILE   LP  Exp RP  Stmt{  struct TreeNode *temp;
+                                             temp = bindSibling(&$5, NULL);
+                                             temp = bindSibling(&$4, temp);
+                                             temp = bindSibling(&$3, temp);
+                                             temp = bindSibling(&$2, temp);
+                                             temp = bindSibling(&$1, temp);
+                                             $$.token = "Stmt";
+                                             bindParent(&$$, temp); }
             ;
-
 DefList     :   Def DefList {  struct TreeNode *temp;
                                temp = bindSibling(&$2, NULL);
                                temp = bindSibling(&$1, temp);
                                $$.token = "DefList";
                                bindParent(&$$, temp);}
-            |
+            | { $$.token = NULL; $$.nextSibling = NULL;  $$.firstChild = NULL; } /* If I don't do anything, $$ will be initialized as $1 by default. */
+                                                                                 /* This will case some strange bugs such as DefList reduce by       */
+                                                                                 /* 'Def DecList' instead of 'Def DefList'.Maybe stack result in this*/ 
             ;
-Def         :   Specifier   DecList SEMI {  struct TreeNode *temp;
+Def         :   Specifier DecList SEMI {  struct TreeNode *temp;
                                             temp = bindSibling(&$3, NULL);
                                             temp = bindSibling(&$2, temp);
                                             temp = bindSibling(&$1, temp);
@@ -148,38 +254,161 @@ DecList     :   Dec {  struct TreeNode *temp;
                        temp = bindSibling(&$1, NULL);
                        $$.token = "DecList";
                        bindParent(&$$, temp); } 
-            |   Dec COMMA DecList
+            |   Dec COMMA DecList{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "DecList";
+                                        bindParent(&$$, temp); }
             ;
 Dec         :   VarDec  { struct TreeNode *temp;
                           temp = bindSibling(&$1, NULL);
-                          $$.token = "VarDec"; 
+                          $$.token = "Dec"; 
                           bindParent(&$$, temp);}
-            |   VarDec  ASSIGNOP    Exp
+            |   VarDec  ASSIGNOP    Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Dec";
+                                        bindParent(&$$, temp); }
             ;
 
-Exp         :   Exp ASSIGNOP  Exp
-            |   Exp AND Exp
-            |   Exp OR  Exp
-            |   Exp RELOP  Exp
-            |   Exp PLUS  Exp
-            |   Exp MINUS  Exp
-            |   Exp STAR  Exp
-            |   Exp DIV  Exp
-            |   LP  Exp  RP
-            |   MINUS  Exp
-            |   NOT   Exp
-            |   ID   LP   Args  RP
-            |   ID   LP   RP
-            |   Exp   LB   Exp  RB
-            |   Exp   DOT   ID
-            |   ID
-            |   INT   
-            |   FLOAT
+Exp         :   Exp ASSIGNOP  Exp {    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp AND Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp OR  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp RELOP  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp PLUS  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp MINUS  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp STAR  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp DIV  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   LP  Exp  RP{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   MINUS  Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$2, NULL);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   NOT   Exp{    struct TreeNode *temp;
+                                        temp = bindSibling(&$2, NULL);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   ID   LP   Args  RP{    struct TreeNode *temp;
+                                        temp = bindSibling(&$4, NULL);
+                                        temp = bindSibling(&$3, temp);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   ID   LP   RP{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp   LB   Exp  RB{    struct TreeNode *temp;
+                                        temp = bindSibling(&$4, NULL);
+                                        temp = bindSibling(&$3, temp);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   Exp   DOT   ID{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp); }
+            |   ID { struct TreeNode *temp;
+                       temp = bindSibling(&$1, NULL);
+                       $$.token = "Exp";
+                       bindParent(&$$, temp); }
+            |   INT { struct TreeNode *temp;
+                       temp = bindSibling(&$1, NULL);
+                       $$.token = "Exp";
+                       bindParent(&$$, temp); }
+            |   FLOAT{ struct TreeNode *temp;
+                       temp = bindSibling(&$1, NULL);
+                       $$.token = "Exp";
+                       bindParent(&$$, temp); }
+            ;
+Args        :   Exp   COMMA   Args{    struct TreeNode *temp;
+                                        temp = bindSibling(&$3, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Args";
+                                        bindParent(&$$, temp); }
+            |   Exp{ struct TreeNode *temp;
+                       temp = bindSibling(&$1, NULL);
+                       $$.token = "Args";
+                       bindParent(&$$, temp); }
             ;
 
-Args        :   Exp   COMMA   Args
-            |   Exp
-            ;
+CompSt      :   error RC    { struct TreeNode *temp;
+                                        temp = bindSibling(&$2, NULL);
+                                        $$.token = "Compt";
+                                        bindParent(&$$, temp);}
+         ;
+Exp     :   Exp LB error RB { struct TreeNode *temp;
+                                        temp = bindSibling(&$4, NULL);
+                                        temp = bindSibling(&$2, temp);
+                                        temp = bindSibling(&$1, temp);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp);}
+         |   error LP    { struct TreeNode *temp;
+                                        temp = bindSibling(&$2, NULL);
+                                        $$.token = "Exp";
+                                        bindParent(&$$, temp);}
+         ;
+Stmt        :   error SEMI  { struct TreeNode *temp;
+                                        temp = bindSibling(&$2, NULL);
+                                        $$.token = "Stmt";
+                                        bindParent(&$$, temp);
+ }       
 
 %%
 
@@ -201,18 +430,25 @@ int main(int argc, char** argv)
     return 0;
 }
 
-yyerror(char* msg) {
-    fprintf(stderr, "error: %s\n", msg);
+int tokenJudge(char *name){
+    if(isupper(name[1]))  // if the second char is Upper, the name must be a token 
+        return 1;
+    else
+        return 0;
 }
 void traverse(struct TreeNode* head, int depth)
 {
     struct TreeNode *child;
     int i;
     
-    for(i = 0; i != depth; ++i)
-        printf(" ");
-    if(head->token != NULL){
-        printf("%s(%d)\n", head->token, head->lineno);
+     if(head->token != NULL){
+        for(i = 0; i != depth; ++i)
+            printf("  ");
+        if(tokenJudge(head->token))
+            printf("%s\n", head->token);
+        else
+            printf("%s(%d)\n", head->token, head->lineno);
+
         if(head->firstChild != NULL) {
              traverse(head->firstChild, depth+1);
         } 
@@ -237,4 +473,9 @@ struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child){
     parent->firstChild = child;
     return parent;
    // printf("bind parent ");
+}
+yyerror(char *msg)
+{
+    errorJudge = 1;
+    fprintf(stderr, "Error type 2 at line %d:%s\n", yylineno, msg);
 }
