@@ -1,5 +1,7 @@
 //test 
 int main()
 {
-    int i; 
+    int i;
+    i = 12;
+    i = 012;
 }

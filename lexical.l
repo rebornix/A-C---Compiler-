@@ -7,8 +7,9 @@ digit   [0-9]
 letter  [a-zA-Z]
 delim   [ \t\n]
 ws      {delim}+
-INT     -?{digit}+
-FLOAT   -?(({digit}+)|({digit}*\.{digit}+))
+INT_8   0[0-7]+
+INT     -?[1-9]{digit}*
+FLOAT   -?(([1-9]{digit}*)|([1-9]{digit}*\.{digit}+)|(0\.{digit}+))
 Identity      {letter}({letter}|{digit}){0,9}
 int yylineno = 1;
 %%
@@ -41,6 +42,10 @@ int yylineno = 1;
 "||"    { yylval.node = initial((int)yylineno, (char*)yytext, "OR"); return OR;}
 "."     { yylval.node = initial((int)yylineno, (char*)yytext, "DOT");return DOT; }
 "!"     { yylval.node = initial((int)yylineno, (char*)yytext, "NOT");return NOT; }
+INT_8   { printf("int_8"); yylval.node = initial((int)yylineno, (char*)yytext, "INT_8");
+            return INT_8;
+        }
+
 {INT}   { yylval.node = initial((int)yylineno, (char*)yytext, "INT");
             yylval.node.ival = atoi(yytext);
             return INT;
