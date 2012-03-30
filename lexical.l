@@ -42,9 +42,11 @@ int yylineno = 1;
 "."     { yylval.node = initial((int)yylineno, (char*)yytext, "DOT");return DOT; }
 "!"     { yylval.node = initial((int)yylineno, (char*)yytext, "NOT");return NOT; }
 {INT}   { yylval.node = initial((int)yylineno, (char*)yytext, "INT");
+            yylval.node.ival = atoi(yytext);
             return INT;
         }
 {FLOAT} { yylval.node = initial((int)yylineno, (char*)yytext, "FLOAT");
+            yylval.node.dval = atof(yytext);
             return FLOAT;
         }
 "int"   { yylval.node = initial((int)yylineno, (char*)yytext, "TYPE"); return TYPE; }
@@ -60,15 +62,48 @@ int yylineno = 1;
 "if"      { yylval.node = initial((int)yylineno, (char*)yytext, "IF");return IF; }
 "Else"    { yylval.node = initial((int)yylineno, (char*)yytext, "ELSE");return ELSE; }
 "while"   { yylval.node = initial((int)yylineno, (char*)yytext, "WHILE");return WHILE; }
-{Identity}    { yylval.node = initial((int)yylineno, (char*)yytext, "ID");return ID; }
-.       { printf("Error type 1 at line: %d Mysterious charater: %s\n", yylineno, yytext);  } 
+{Identity}    { yylval.node = initial((int)yylineno, (char*)yytext, "ID");
+                return ID; }
+"//"    {
+            char c = input();
+            while(c != '\n' && c != EOF) c = input();
+        }   
+"/*"    {
+            int succFinish = 0;
+            char c = input();
+            while(c != EOF) {
+                if( c == '/' ){
+                    char next = input();
+                    if( next != EOF && next == '*'){
+                        printf("Error type 3 at line: %d Mysterious charater: %c\n", yylineno, c);
+                        errorJudge = 1;
+                    }
+
+                }
+                if( c == '*' ){
+                    char next = input();
+                    if( next != EOF && next == '/'){
+                        succFinish = 1;
+                        break;
+                    }
+                }
+                c = input();
+            }
+            errorJudge = 1;
+            if( succFinish != 1)
+                 printf("Error type 3 at line %d \n", yylineno);
+        }
+.       { errorJudge = 1;printf("Error type 1 at line: %d Mysterious charater: %s\n", yylineno, yytext);  } 
 
 %%
 struct TreeNode 
 initial(int lineno, char* value, char* token)
 {
     struct TreeNode node;
-    node.value = value;
+    if( token != "INT" || token != "FLOAT") {
+        node.value = malloc(32);
+        memcpy(node.value, value +'\0', 32); // \0 is a must
+    }
     node.token = token;
     node.nextSibling = NULL;
     node.firstChild = NULL;

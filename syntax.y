@@ -444,8 +444,16 @@ void traverse(struct TreeNode* head, int depth)
      if(head->token != NULL){
         for(i = 0; i != depth; ++i)
             printf("  ");
-        if(tokenJudge(head->token))
-            printf("%s\n", head->token);
+        if(tokenJudge(head->token)){
+            if( head->token == "INT")
+                printf("%s:%d\n", head->token, head->ival);
+            else if (head->token == "FLOAT")
+                printf("%s:%.6f\n", head->token, head->dval);
+            else if (head->token == "ID" )
+                    printf("%s: %s\n", head->token, head->value);
+            else
+                printf("%s\n", head->token);
+        }
         else
             printf("%s(%d)\n", head->token, head->lineno);
 
