@@ -29,7 +29,7 @@ int errorJudge = 0;
 %token <node>  PLUS MINUS STAR  DIV 
 %token <node>  DOT NOT 
 %token <node>  LP RP LB RB LC RC STRUCT RETURN IF ELSE WHILE ID
-%token <node>  INT INT_8
+%token <node>  INT
 %token <node>  FLOAT 
 %token <node>  TYPE
 
@@ -136,13 +136,6 @@ VarDec      :   ID { struct TreeNode *temp;
                      $$.token = "VarDec"; 
                      bindParent(&$$, temp);}
             |   VarDec  LB  INT RB{  struct TreeNode *temp;
-                                             temp = bindSibling(&$4, NULL);
-                                             temp = bindSibling(&$3, temp);
-                                             temp = bindSibling(&$2, temp);
-                                             temp = bindSibling(&$1, temp);
-                                             $$.token = "VarDec";
-                                             bindParent(&$$, temp); }
-            |   VarDec  LB  INT_8 RB{  struct TreeNode *temp;
                                              temp = bindSibling(&$4, NULL);
                                              temp = bindSibling(&$3, temp);
                                              temp = bindSibling(&$2, temp);
@@ -375,10 +368,6 @@ Exp         :   Exp ASSIGNOP  Exp {    struct TreeNode *temp;
                        $$.token = "Exp";
                        bindParent(&$$, temp); }
             |   INT { struct TreeNode *temp;
-                       temp = bindSibling(&$1, NULL);
-                       $$.token = "Exp";
-                       bindParent(&$$, temp); }
-            |   INT_8 { struct TreeNode *temp;
                        temp = bindSibling(&$1, NULL);
                        $$.token = "Exp";
                        bindParent(&$$, temp); }

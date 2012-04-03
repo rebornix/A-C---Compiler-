@@ -7,8 +7,9 @@ digit   [0-9]
 letter  [a-zA-Z]
 delim   [ \t\n]
 ws      {delim}+
-INT_8   0[0-7]+
-INT     -?[1-9]{digit}*
+INT     (-?[1-9]{digit}*)|[0]
+INT_8   [0]([0-7]+)
+INT_16  [0](("x")|("X"))([0-9A-Fa-f]+)
 FLOAT   -?(([1-9]{digit}*)|([1-9]{digit}*\.{digit}+)|(0\.{digit}+))
 Identity      {letter}({letter}|{digit}){0,9}
 int yylineno = 1;
@@ -42,10 +43,47 @@ int yylineno = 1;
 "||"    { yylval.node = initial((int)yylineno, (char*)yytext, "OR"); return OR;}
 "."     { yylval.node = initial((int)yylineno, (char*)yytext, "DOT");return DOT; }
 "!"     { yylval.node = initial((int)yylineno, (char*)yytext, "NOT");return NOT; }
-INT_8   { printf("int_8"); yylval.node = initial((int)yylineno, (char*)yytext, "INT_8");
-            return INT_8;
+{INT_16}   {  
+            char *value = yytext;
+            int iVal = 0;
+            int length = sizeof(yytext);
+            int i;
+            value = value + 2;
+            for(i = 0; i < length - 2; ++i){
+                int count;
+                int sum = 0;
+                if(*value >= 48 && *value <= 57)
+                    sum = *value - 48;
+                if(*value >= 61 && *value <= 102)
+                    sum = *value - 87;
+                if(*value >= 65 && *value <= 70)
+                    sum = *value - 55;
+                value++;
+                for(count = 0; count != length - i - 3; ++count)
+                    sum = sum * 16;
+                iVal = iVal + sum;
+            }
+            yylval.node = initial((int)yylineno, (char*)yytext, "INT");
+            yylval.node.ival = iVal;
+            return INT;
         }
-
+{INT_8} {
+            char *value = yytext;
+            int iVal = 0;
+            int length = sizeof(yytext);
+            int i;
+            for(i = 0; i < length - 1; ++i){
+                int count;
+                int sum = *value++ - 48;
+                for(count = 0; count != length - i - 2; ++count)
+                    sum = sum * 8;
+                iVal = iVal + sum;
+            }
+                printf("%d\n", iVal);
+            yylval.node = initial((int)yylineno, (char*)yytext, "INT");
+            yylval.node.ival = iVal;
+            return INT;
+        }
 {INT}   { yylval.node = initial((int)yylineno, (char*)yytext, "INT");
             yylval.node.ival = atoi(yytext);
             return INT;
