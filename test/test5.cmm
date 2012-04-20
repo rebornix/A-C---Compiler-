@@ -1,8 +1,8 @@
-//test 
 int main()
 {
     int i;
-    i = 0xA1;
+    float j;
     i = 012;
-    i = 0; 
+    i = 0xAB1;
+    j = 4.1e2;
 }

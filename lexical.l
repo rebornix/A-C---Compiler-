@@ -1,6 +1,5 @@
 %{
 #include "syntax.tab.h"
-
 struct TreeNode initial(int lineno, char* value, char* token);
 %}
 digit   [0-9]
@@ -10,7 +9,7 @@ ws      {delim}+
 INT     (-?[1-9]{digit}*)|[0]
 INT_8   [0]([0-7]+)
 INT_16  [0](("x")|("X"))([0-9A-Fa-f]+)
-FLOAT   -?(([1-9]{digit}*)|([1-9]{digit}*\.{digit}+)|(0\.{digit}+))
+FLOAT   ({digit}(\.{digit})?)((("e")|("E"))[+-]?{digit})?
 Identity      {letter}({letter}|{digit}){0,9}
 int yylineno = 1;
 %%
@@ -88,8 +87,50 @@ int yylineno = 1;
             yylval.node.ival = atoi(yytext);
             return INT;
         }
-{FLOAT} { yylval.node = initial((int)yylineno, (char*)yytext, "FLOAT");
-            yylval.node.dval = atof(yytext);
+{FLOAT} { 
+            yylval.node = initial((int)yylineno, (char*)yytext, "FLOAT");
+
+            char temp[128];
+            float sum = 0.0, q = 1.0;
+            float exp;
+            int num, j, pos= 0;
+            char *p = yytext;
+            while( *p && *p != 'E' && *p != 'e')
+            {
+                temp[pos] = *p;
+                ++pos;
+                ++p;
+            }
+            temp[pos] = '\0';
+            sum = atof(temp);
+            printf("%f\n", sum);
+            if(*p)
+            {
+                p++;
+                memset(temp, 0, 128);
+                pos = 0;
+                if(*p == '-') {
+                    exp = 1.0 / 10.0;
+                    p++;
+                }
+                else if( *p == '+'){
+                    exp = 10.0;
+                    p++;
+                }
+                else
+                    exp = 10.0;
+
+                while(*p)
+                {
+                    temp[pos] = *p;
+                    ++pos;
+                    ++p;
+                }
+                num = atoi(temp);
+                for( j = 0; j < num; j++)
+                    q *= exp;
+            }
+            yylval.node.dval = sum * q;
             return FLOAT;
         }
 "int"   { yylval.node = initial((int)yylineno, (char*)yytext, "TYPE"); return TYPE; }
@@ -132,7 +173,7 @@ int yylineno = 1;
                 }
                 c = input();
             }
-            errorJudge = 1;
+            //errorJudge = 1;
             if( succFinish != 1)
                  printf("Error type 3 at line %d \n", yylineno);
         }
