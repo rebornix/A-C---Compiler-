@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<ctype.h>
-
+#include<stdio.h>
 struct TreeNode {
     int ival;
     double dval;
@@ -11,7 +11,11 @@ struct TreeNode {
     int lineno;
 };
 struct TreeNode *head;
-void traverse(struct TreeNode *head, int depth);
+void getType(char *type, struct TreeNode* specifier);
+void addExtDecList(char * typeChar, struct TreeNode* ExtDecList);
+void addFunDec(char*, struct TreeNode*);
+
+void traverse(struct TreeNode *head);
 struct TreeNode* bindSibling(struct TreeNode * left, struct TreeNode * right);
 struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child);
 
@@ -42,11 +46,13 @@ struct SyntaxNode_
     union
     {
         struct { Type returnType;
-                 Type paramTypeList;
+                 FieldList paramTypeList;
                  int paramCount;
         } func;
         Type type;
     } u;
+    enum {variable, function } kind;
+    SyntaxNode next;
 };
 
 SyntaxNode syntax_table;

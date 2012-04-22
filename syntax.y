@@ -41,10 +41,12 @@ Program     :   ExtDefList  {   struct TreeNode *temp;
                                 temp = bindSibling(&$1, NULL);
                                 $$.token = "Program";
                                 temp = bindParent(&$$, temp);
-                                if(errorJudge == 0)
-                                 //   traverse(temp, 0);
-                                addToTable();
-                                printf("%d\n", syntax_table->u.type->u.basic);
+                                init_table();
+                                if(errorJudge == 0){
+                                    traverseInit(temp, 0);
+                                    traverse(temp);
+                                    }
+                                trav_syn_table();
                                 }
             ;
 ExtDefList  :   ExtDef  ExtDefList { struct TreeNode *temp; 
