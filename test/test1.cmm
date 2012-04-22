@@ -1,4 +1,6 @@
-int j;
+int i;
+float f;
+int j[2][3];
 int main(int i, float j)
 {
     int i;

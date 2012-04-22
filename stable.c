@@ -4,13 +4,6 @@
 void init_table()
 {
     syntax_table = NULL;
-    /*
-    syntax_table = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
-    syntax_table->name = "test";
-    syntax_table->u.type = (Type)malloc(sizeof(struct Type_));
-    syntax_table->u.type->kind = basic;
-    syntax_table->u.type->u.basic = 1;
-    */
 }
 
 int tokenJudge(char *name){
@@ -19,10 +12,16 @@ int tokenJudge(char *name){
     else
         return 0;
 }
-void getType(char *type, struct TreeNode* specifier)
+void getType(char *type, Type structType, struct TreeNode* specifier)
 {
     if( strcmp(specifier->firstChild->token, "TYPE") == 0 ){
         memcpy(type, specifier->firstChild->value, 32);
+    }
+    else { 
+        /*
+         * StructSpecifier
+         */
+
     }
 }
 
@@ -34,26 +33,48 @@ void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
         printf("##\n");
         addExtDecList(typeChar, VarDec->nextSibling->nextSibling);
     }
-    while( strcmp(VarDec->firstChild->token, "ID") != 0 ){
-        VarDec = VarDec->firstChild;
-    }
+
     SyntaxNode newNode = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
     newNode->name = malloc(32);
     memcpy(newNode->name, VarDec->firstChild->value+'\0', 32);
     newNode->kind = variable;
     newNode->next = NULL;
 
-    /*
-     * set the type of the syntax
-     */
-    newNode->u.type = (Type)malloc(sizeof( struct Type_ ));
-    if( typeChar == "int"  ){
-        newNode->u.type->kind = basic;
-        newNode->u.type->u.basic = 0;
+    if( strcmp(VarDec->firstChild->token, "ID" ) != 0 ){
+        Type elemType = (Type)malloc(sizeof( struct Type_ ));
+        if( strcmp(typeChar, "int")== 0  ){
+            elemType->kind = basic;
+            elemType->u.basic = 0;
+        }
+        else if( strcmp(typeChar, "float") == 1){
+            elemType->kind = basic;
+            elemType->u.basic = 1;
+        }
+        Type arrayType;
+        struct TreeNode *temp = VarDec->firstChild;
+        while( strcmp(temp->token, "ID") != 0 ){
+            arrayType = (Type)malloc(sizeof( struct Type_ ));
+            arrayType->kind = array;
+            arrayType->u.array.elem = elemType;
+            arrayType->u.array.size = temp->nextSibling->nextSibling->ival;
+            elemType = arrayType;
+            temp = temp->firstChild;
+        }
+        newNode->u.type = arrayType;
     }
-    if(  typeChar == "float" )
-    {   newNode->u.type->kind = basic;
-        newNode->u.type->u.basic = 1;
+    else{
+        /*
+         * set the type of the syntax
+         */
+        newNode->u.type = (Type)malloc(sizeof( struct Type_ ));
+        if( strcmp(typeChar, "int") == 0  ){
+            newNode->u.type->kind = basic;
+            newNode->u.type->u.basic = 0;
+        }
+        if(  strcmp(typeChar, "float") == 0 )
+        {   newNode->u.type->kind = basic;
+            newNode->u.type->u.basic = 1;
+        }
     }
     /*
      * to do list:  struct type
@@ -202,7 +223,6 @@ void traverse(struct TreeNode* head)
     
      if(head->token != NULL){
         //Add to Syntax table
-        printf("%s\n", head->token);
         if( strcmp(head->token,"ExtDef") == 0 ) { //ExtDef : Specifier
 
             /*
@@ -267,13 +287,22 @@ void trav_syn_table(){
     SyntaxNode itr = syntax_table;
     printf(" traverse the syntax table\n");
     while( itr != NULL ){
-        printf("%s \n", itr->name);
+        printf("%s", itr->name);
         if( itr->kind == function ){
             printf("count: %d\n", itr->u.func.paramCount);
             FieldList newList = itr->u.func.paramTypeList;
             while(newList!=NULL){
                 printf("type %s\n", newList->name);
                 newList = newList->tail;
+            }
+        }
+        else{
+            if( itr->u.type->kind == basic ){
+                printf(" basic: %d\n", itr->u.type->u.basic);
+            }
+            else if( itr->u.type->kind == array ){
+                printf(" array: size[%d][%d]\n", itr->u.type->u.array.size, itr->u.type->u.array.elem->u.array.size);
+                
             }
         }
         itr = itr->next;
