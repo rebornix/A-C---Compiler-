@@ -1,5 +1,9 @@
 run: parser
+	./parser test/test.cmm
 	./parser test/test1.cmm
+	./parser test/test2.cmm
+	./parser test/test3.cmm
+	./parser test/test4.cmm
 parser: syntax.tab.c lex.yy.c stable.c
 	gcc syntax.tab.c stable.c -lfl -ly -o parser
 syntax.tab.c: syntax.y 

@@ -11,9 +11,6 @@ struct TreeNode {
     int lineno;
 };
 struct TreeNode *head;
-void getType(char *type, struct TreeNode* specifier);
-void addExtDecList(char * typeChar, struct TreeNode* ExtDecList);
-void addFunDec(char*, struct TreeNode*);
 
 void traverse(struct TreeNode *head);
 struct TreeNode* bindSibling(struct TreeNode * left, struct TreeNode * right);
@@ -23,6 +20,7 @@ struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child);
 typedef struct Type_* Type;
 typedef struct FieldList_* FieldList;
 typedef struct SyntaxNode_* SyntaxNode;
+typedef struct UserType_* UserType;
 struct Type_
 {
     enum { basic, array, structure } kind;
@@ -54,6 +52,15 @@ struct SyntaxNode_
     enum {variable, function } kind;
     SyntaxNode next;
 };
-
+struct UserType_
+{
+    char* name;
+    FieldList tail;
+    UserType next;
+};
 SyntaxNode syntax_table;
-
+UserType user_type_table;
+void getType(Type type, struct TreeNode* specifier);
+void addExtDecList(Type type, struct TreeNode* ExtDecList);
+void addFunDec(Type type, struct TreeNode*);
+void addDec(Type, struct TreeNode*);

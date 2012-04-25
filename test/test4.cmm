@@ -1,9 +1,17 @@
-struct Complex 
+int inc(int i, int x)
 {
-	float real,image;
-};
+    int i = 1;
+    return i+x;
+}
 int main()
 {
-	struct Complex x;
-	y.image = 3.5;
+    int j=0, a=1, b=1, fib[10];
+    while (j < 10)
+    {
+        int c = a+b;
+        fib[j] = b;
+        a = b;
+        b = c;
+        j = inc(j);
+    }
 }

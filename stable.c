@@ -1,6 +1,8 @@
 #include"stable.h"
 #include<stdlib.h>
 #include<string.h>
+//#define DEBUG
+#define COMPILE
 void init_table()
 {
     syntax_table = NULL;
@@ -12,28 +14,206 @@ int tokenJudge(char *name){
     else
         return 0;
 }
-void getType(char *type, Type structType, struct TreeNode* specifier)
+int findUserType(char *typeName)
+{
+    UserType itr = user_type_table;
+    int found = 0;
+    while( itr != NULL ){ 
+        if( strcmp(itr->name, typeName) == 0 ){
+            found = 1;
+            break;
+        }
+        itr = itr->next;
+    }
+    return found;
+}
+int findName(char *name){
+    SyntaxNode itr = syntax_table;
+    int found = 0;
+    while( itr != NULL ){
+        if( strcmp(itr->name,name) == 0  ){
+            found = 1;
+            break;
+        }
+        itr = itr->next;
+    }
+    return found;
+}
+int findVariable(char *varName)
+{
+    SyntaxNode itr = syntax_table;
+    int found = 0;
+    while( itr != NULL ){
+        if( strcmp(itr->name, varName) == 0 && itr->kind == variable ){
+            found = 1;
+            break;
+        }
+        itr = itr->next;
+    }
+    return found;
+}
+int findFunc(char *funcName)
+{
+    SyntaxNode itr = syntax_table;
+    int found = 0;
+    while( itr != NULL ){
+        if( strcmp(itr->name, funcName) == 0 && itr->kind == function ){
+            found = 1;
+            break;
+        }
+        itr = itr->next;
+    }
+    return found;
+}
+void getType(Type type,  struct TreeNode* specifier)
 {
     if( strcmp(specifier->firstChild->token, "TYPE") == 0 ){
-        memcpy(type, specifier->firstChild->value, 32);
+        if( strcmp( specifier->firstChild->value, "int") == 0){
+            type->kind = basic;
+            type->u.basic = 0;
+        }
+        if( strcmp( specifier->firstChild->value, "float") == 0){
+            type->kind = basic;
+            type->u.basic = 1;
+        }
     }
     else { 
         /*
          * StructSpecifier
          */
+#ifdef DEBUG
+        printf("enter StructSpecifier\n");
+#endif
+        type->kind = structure;
+        struct TreeNode* TAG = specifier->firstChild->firstChild->nextSibling;
+        type->u.structure = (FieldList)malloc(sizeof(struct FieldList_));
+        if( TAG->token != NULL &&  strcmp( TAG->token, "Tag") == 0 ){
+            if( findUserType(TAG->firstChild->value) == 0 ){
+#ifdef COMPILE
+                printf("Error Type 17 at line %d : Undefined type: %s\n", TAG->lineno, TAG->firstChild->value);
+#endif
+            }
+            else {
+                type->u.structure->name = malloc(32);
+                memcpy(type->u.structure->name, TAG->firstChild->value, 32);
+                type->u.structure->type = NULL;
+                type->u.structure->tail = NULL;
+            }
+        }
+        else{
+            if( TAG->token != NULL ){ // add to the user_type_list or output an erro message if it exites already.
+                type->u.structure->name = malloc(32);
+                memcpy(type->u.structure->name, TAG->firstChild->value, 32);
+            }
+            else
+                type->u.structure->name = NULL; //undefined
+            type->u.structure->tail = NULL;
+#ifdef DEBUG
+            printf("structure start from here\n");
+#endif
+            struct TreeNode* DefList = TAG->nextSibling->nextSibling;
+            while(DefList != NULL){
+                struct TreeNode* Def = DefList->firstChild;
+                Type type_temp = (Type)malloc(sizeof(struct Type_));
+                getType(type_temp, Def->firstChild);
+#ifdef DEBUG
+                printf("get type recursively\n");
+#endif
+                struct TreeNode* DecList = Def->firstChild->nextSibling;
 
+                do {
+                    struct TreeNode* VarDec = DecList->firstChild->firstChild;
+                    FieldList newField = (FieldList)malloc(sizeof(struct FieldList_));
+                    newField->type = (Type)malloc(sizeof(struct Type_));
+                    /*
+                     * VarDec Assignop Exp undone
+                     */
+                    if( strcmp(VarDec->firstChild->token, "ID" ) != 0 ){
+                        Type elemType = (Type)malloc(sizeof( struct Type_ ));
+                        elemType->kind = type_temp->kind;
+                        if( type_temp->kind == basic )
+                            elemType->u.basic = type_temp->u.basic;
+                        
+                        Type arrayType;
+                        struct TreeNode *temp = VarDec->firstChild;
+                        while( strcmp(temp->token, "ID") != 0 ){
+                            arrayType = (Type)malloc(sizeof( struct Type_ ));
+                            arrayType->kind = array;
+                            arrayType->u.array.elem = elemType;
+                            arrayType->u.array.size = temp->nextSibling->nextSibling->ival;
+                            elemType = arrayType;
+                            temp = temp->firstChild;
+                        }
+                        newField->type = arrayType;
+                        newField->tail = NULL;
+                    }
+                    else{
+                        /*
+                         * set the type of the syntax
+                         */
+                        newField->tail = NULL;
+                        newField->type->kind = type_temp->kind;
+                        if( type_temp->kind == basic)
+                            newField->type->u.basic = type_temp->u.basic;
+                    }
+                    /*
+                     * add to fieldlist
+                     */
+                    FieldList itr = type->u.structure;
+                    while(itr->tail != NULL)
+                        itr = itr->tail;
+                    itr->tail = newField;
+                    if( DecList->firstChild->nextSibling == NULL)
+                        DecList = NULL;
+                    else
+                        DecList = DecList->firstChild->nextSibling->nextSibling;
+                }
+                while( DecList != NULL );
+
+                if( DefList->firstChild->nextSibling->token  == NULL) // nextsibling is not NULL , in my implementation
+                    DefList = NULL;
+                else
+                DefList = DefList->firstChild->nextSibling;
+            }
+#ifdef DEBUG
+            printf("-----------------struct name: %s--------------------------\n", type->u.structure->name);
+#endif
+            if( user_type_table == NULL ){
+                user_type_table = (UserType)malloc(sizeof(struct UserType_));
+                user_type_table->name = malloc(32);
+                memcpy(user_type_table->name, type->u.structure->name, 32);
+                user_type_table->tail = type->u.structure->tail;
+                user_type_table->next = NULL;
+            }
+            else{
+                UserType itr = user_type_table;
+                int reDefError = 0;
+                if( findUserType(type->u.structure->name) == 1 )
+                    reDefError = 1;
+                if( reDefError == 0 ){
+                    itr->next = (UserType)malloc(sizeof(struct UserType_));
+                    itr->next->name = malloc(32);
+                    memcpy(itr->next->name, type->u.structure->name, 32);
+                    itr->next->tail = type->u.structure->tail;
+                    itr->next->next = NULL;
+                }
+                else{
+#ifdef COMPILE
+                    printf("Error Type 16 at line %d : Redefined Structure %s\n",TAG->lineno,  type->u.structure->name);
+#endif
+                }
+            }
+        }
     }
 }
-
-void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
-{ 
-    printf("addExtDecList entry\n"); // if '\0' is not added, the buffer will not be flushed ,then I will never know where the bug is.
-    struct TreeNode* VarDec = ExtDecList->firstChild;
-    if( VarDec->nextSibling != NULL){
-        printf("##\n");
-        addExtDecList(typeChar, VarDec->nextSibling->nextSibling);
+void addVarDec(Type type, struct TreeNode* VarDec)
+{
+    if( findName(VarDec->firstChild->value) == 1 ){
+#ifdef COMPILE
+        printf("Error Type 3 at line %d : Redefined variable \"%s\"\n",VarDec->lineno,  VarDec->firstChild->value);
+#endif
+        return ;
     }
-
     SyntaxNode newNode = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
     newNode->name = malloc(32);
     memcpy(newNode->name, VarDec->firstChild->value+'\0', 32);
@@ -42,14 +222,10 @@ void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
 
     if( strcmp(VarDec->firstChild->token, "ID" ) != 0 ){
         Type elemType = (Type)malloc(sizeof( struct Type_ ));
-        if( strcmp(typeChar, "int")== 0  ){
-            elemType->kind = basic;
-            elemType->u.basic = 0;
-        }
-        else if( strcmp(typeChar, "float") == 1){
-            elemType->kind = basic;
-            elemType->u.basic = 1;
-        }
+        elemType->kind = type->kind;
+        if( type->kind == basic )
+            elemType->u.basic = type->u.basic;
+
         Type arrayType;
         struct TreeNode *temp = VarDec->firstChild;
         while( strcmp(temp->token, "ID") != 0 ){
@@ -67,14 +243,9 @@ void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
          * set the type of the syntax
          */
         newNode->u.type = (Type)malloc(sizeof( struct Type_ ));
-        if( strcmp(typeChar, "int") == 0  ){
-            newNode->u.type->kind = basic;
-            newNode->u.type->u.basic = 0;
-        }
-        if(  strcmp(typeChar, "float") == 0 )
-        {   newNode->u.type->kind = basic;
-            newNode->u.type->u.basic = 1;
-        }
+        newNode->u.type->kind = type->kind;
+        if( type->kind == basic)
+            newNode->u.type->u.basic = type->u.basic;
     }
     /*
      * to do list:  struct type
@@ -83,7 +254,6 @@ void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
     //add to the table
     if( syntax_table == NULL ) {
         syntax_table = newNode;
-        printf("%s ..\n", syntax_table->name);
     }
     else{
         SyntaxNode itr = syntax_table;
@@ -92,8 +262,41 @@ void addExtDecList(char* typeChar, struct TreeNode* ExtDecList)
         itr->next = newNode;
     }
 }
-void addFunDec(char* returnType, struct TreeNode* FunDec)
+void addExtDecList(Type type, struct TreeNode* ExtDecList)
 {
+#ifdef DEBUG
+    printf("addExtDecList entry\n"); 
+#endif
+    struct TreeNode* VarDec = ExtDecList->firstChild;
+    if( VarDec->nextSibling != NULL){
+        Type newType = (Type)malloc(sizeof(struct Type_));
+        memcpy(newType, type, sizeof(struct Type_));
+        addExtDecList(newType, VarDec->nextSibling->nextSibling);
+    }
+    addVarDec(type, VarDec);
+}
+void addDec(Type type, struct TreeNode* DecList)
+{
+#ifdef DEBUG
+    printf("addDec entry\n");
+#endif
+    struct TreeNode* Dec = DecList->firstChild;
+    if( Dec->nextSibling != NULL ){
+        Type newType = (Type)malloc(sizeof(struct Type_));
+        memcpy(newType, type, sizeof(struct Type_));
+        addDec(newType, Dec->nextSibling->nextSibling);
+    }
+    struct TreeNode* VarDec = Dec->firstChild;
+    addVarDec(type, VarDec);
+}
+void addFunDec(Type returnType, struct TreeNode* FunDec)
+{
+    if ( findName(FunDec->firstChild->value) == 1 ){
+#ifdef COMPILE
+        printf("Error Type 4 at line %d: Function Redefined \n", FunDec->lineno);
+#endif 
+        return ;
+    }
     struct TreeNode* ID = FunDec->firstChild;
     SyntaxNode newNode = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
     newNode->name = malloc(32);
@@ -102,29 +305,27 @@ void addFunDec(char* returnType, struct TreeNode* FunDec)
     newNode->next = NULL;
 
     newNode->u.func.returnType = (Type)malloc(sizeof( struct Type_ ));
-    if( returnType == "int" ){
-        newNode->u.func.returnType->kind = basic;
-        newNode->u.func.returnType->u.basic = 0;
-    }
-    if( returnType == "float" ){
-        newNode->u.func.returnType->kind = basic;
-        newNode->u.func.returnType->u.basic = 1;
-    }
+    newNode->u.func.returnType->kind = returnType->kind;
+    if( returnType->kind == basic )
+        newNode->u.func.returnType->u.basic = returnType->u.basic;
+
     /*
      * to do : struct 
      */
     newNode->u.func.paramCount = 0;
     newNode->u.func.paramTypeList = NULL;
-    printf("rp/varlist: %s\n", ID->nextSibling->nextSibling->value);
     if( strcmp(ID->nextSibling->nextSibling->value, ")") != 0 ){
     /*
      * param type list
      */
+#ifdef DEBUG
         printf("param exists\n");
+#endif
         struct TreeNode * ParamDec = ID->nextSibling->nextSibling->firstChild;
         while(ParamDec != NULL ){
             struct TreeNode* Specifier = ParamDec->firstChild;
-            char *typeList = malloc(32);
+            //char *typeList = malloc(32);
+            Type typeList = (Type)malloc(sizeof(struct Type_));
             newNode->u.func.paramCount++;
             getType(typeList, Specifier);
             if( newNode->u.func.paramTypeList == NULL ){
@@ -133,14 +334,10 @@ void addFunDec(char* returnType, struct TreeNode* FunDec)
                 memcpy(newNode->u.func.paramTypeList->name, typeList+'\0', 32);
                 newNode->u.func.paramTypeList->tail = NULL;
                 newNode->u.func.paramTypeList->type = (Type)malloc(sizeof( struct Type_ ));
-                if( strcmp(typeList, "int") == 0 ){
-                    newNode->u.func.paramTypeList->type->kind = basic;
-                    newNode->u.func.paramTypeList->type->u.basic = 0;
-                }
-                else if( strcmp( typeList, "float") == 0 ){
-                    newNode->u.func.paramTypeList->type->kind = basic;
-                    newNode->u.func.paramTypeList->type->u.basic = 1;
-                }
+
+                newNode->u.func.paramTypeList->type->kind = typeList->kind;
+                if(typeList->kind == basic)
+                   newNode->u.func.paramTypeList->type->u.basic = typeList->u.basic;
                 /*
                  * struct undone
                  */
@@ -154,14 +351,10 @@ void addFunDec(char* returnType, struct TreeNode* FunDec)
                 memcpy(newParam->name, typeList+'\0', 32);
                 newParam->tail = NULL;
                 newParam->type = (Type)malloc(sizeof( struct Type_ ));
-                if( strcmp(typeList, "int") == 0 ){
-                    newParam->type->kind = basic;
-                    newParam->type->u.basic = 0;
-                }
-                else if( strcmp( typeList, "float") == 0 ){
-                    newParam->type->kind = basic;
-                    newParam->type->u.basic = 1;
-                }
+
+                newParam->type->kind = typeList->kind; 
+                if( typeList->kind == basic )
+                    newParam->type->u.basic = typeList->u.basic;
                 param->tail = newParam;
             }
             if( ParamDec->nextSibling != NULL){
@@ -171,10 +364,8 @@ void addFunDec(char* returnType, struct TreeNode* FunDec)
                 ParamDec = NULL;
         }
     }
-    printf("after param\n");
     if( syntax_table == NULL ) {
         syntax_table = newNode;
-        printf("%s ..\n", syntax_table->name);
     }
     else{
         SyntaxNode itr = syntax_table;
@@ -184,8 +375,68 @@ void addFunDec(char* returnType, struct TreeNode* FunDec)
     }
 
 }
+void expFunc(struct TreeNode* Exp)
+{
+#ifdef DEBUG
+    printf("expFunc entry  token: %s\n", Exp->token);
+#endif
+    struct TreeNode* firstChild = Exp->firstChild;
+    if( strcmp( firstChild->token, "Exp" ) == 0) {
+        expFunc( firstChild );
+        if( strcmp(firstChild->nextSibling->token, "DOT") == 0 ){
+#ifdef DEBUG
+            printf("Exp DOT ID \n");
+#endif
+            // check whether the id existed in struct
+        }
+        else{
+#ifdef DEBUG
+            printf("Exp ... Exp\n");
+#endif
+            expFunc( firstChild->nextSibling->nextSibling );
+        }
+    }
+    else{
+        if( strcmp( firstChild->token, "ID" ) == 0){
+#ifdef DEBUG
+            printf("ID \n");
+#endif
+            struct TreeNode* ID = firstChild;
+            if( findVariable(ID->value) ==  0){
+                if( ID->nextSibling == NULL ){
+#ifdef COMPILE
+                    printf("Error Type 1 at line %d: Undefined variable \"%s\"\n",ID->lineno, ID->value);
+#endif      
+                }
+                else
+#ifdef COMPILE
+                    printf("Error Type 1 at line %d: Undefined function \"%s\"\n",ID->lineno, ID->value);
+#endif      
+            }
+            else {
+                if( ID->nextSibling != NULL ){
+                    // function 
+                    if( findFunc(ID->value) == 0 )
+#ifdef COMPILE
+                        printf("Error Type 11 at line %d : Variable can't be called as a funtion\n", ID->lineno);
+#endif      
+                }
+            }
+        }
+        else{ // type check
+        }
+    }
+    if( strcmp ( firstChild->token, "LP") == 0 || strcmp(firstChild->token, "MINUS")== 0 || strcmp(firstChild->token, "NOT") == 0){
+#ifdef DEBUG
+        printf("LP/MINUS/NOT Exp\n");
+#endif
+        expFunc( firstChild->nextSibling );
+    }
+
+}
 void traverseInit(struct TreeNode* head, int depth)
 {
+#ifdef DEBUG
     struct TreeNode *child;
     int i;
 
@@ -214,7 +465,7 @@ void traverseInit(struct TreeNode* head, int depth)
             traverseInit(head->nextSibling, depth);
         }
     }
-
+#endif
 }
 void traverse(struct TreeNode* head)
 {
@@ -229,10 +480,8 @@ void traverse(struct TreeNode* head)
              * get type from Specifier
              */
             struct TreeNode* specifier = head->firstChild;
-            char *type = malloc(32);
-            printf("get Type !!! \n");
+            Type type = (Type)malloc(sizeof(struct Type_));
             getType(type, specifier);
-            printf("............... %s .............\n", type);
             /*
              * get Varlist or func list
              */
@@ -245,13 +494,19 @@ void traverse(struct TreeNode* head)
             }
         }
         if( strcmp(head->token, "Def") == 0){ // Def: Specifier DecList SEMI
-            printf(" get Def \n");
+            struct TreeNode* specifier = head->firstChild;
+            Type type = (Type)malloc(sizeof(struct Type_));
+            getType(type, specifier);
+            struct TreeNode* DecList = specifier->nextSibling;
+            addDec(type, DecList);
         }
 
         /*
          * Traverse the syntax table to look for the variable or function
          */
         if( strcmp(head->token, "Exp") == 0 ){
+            expFunc(head);
+            return; // if not return , the child Exp will be checked several times
         }
 
         /*
@@ -266,7 +521,6 @@ void traverse(struct TreeNode* head)
             traverse(head->nextSibling);
         }
     }
-    
 }
 
 struct TreeNode* bindSibling(struct TreeNode *left, struct TreeNode * right)
@@ -284,10 +538,11 @@ struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child){
 }
 
 void trav_syn_table(){
+#ifdef DEBUG
     SyntaxNode itr = syntax_table;
-    printf(" traverse the syntax table\n");
+    printf("######   traverse the syntax table   ######\n");
     while( itr != NULL ){
-        printf("%s", itr->name);
+        printf("%s: ", itr->name);
         if( itr->kind == function ){
             printf("count: %d\n", itr->u.func.paramCount);
             FieldList newList = itr->u.func.paramTypeList;
@@ -296,7 +551,7 @@ void trav_syn_table(){
                 newList = newList->tail;
             }
         }
-        else{
+        else if (itr->kind == variable ){
             if( itr->u.type->kind == basic ){
                 printf(" basic: %d\n", itr->u.type->u.basic);
             }
@@ -304,7 +559,11 @@ void trav_syn_table(){
                 printf(" array: size[%d][%d]\n", itr->u.type->u.array.size, itr->u.type->u.array.elem->u.array.size);
                 
             }
+            else{
+                printf("structure\n");
+            }
         }
         itr = itr->next;
     }
+#endif
 }

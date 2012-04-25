@@ -78,7 +78,6 @@ int yylineno = 1;
                     sum = sum * 8;
                 iVal = iVal + sum;
             }
-                printf("%d\n", iVal);
             yylval.node = initial((int)yylineno, (char*)yytext, "INT");
             yylval.node.ival = iVal;
             return INT;
@@ -103,7 +102,6 @@ int yylineno = 1;
             }
             temp[pos] = '\0';
             sum = atof(temp);
-            printf("%f\n", sum);
             if(*p)
             {
                 p++;
