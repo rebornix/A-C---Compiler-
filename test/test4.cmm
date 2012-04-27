@@ -1,11 +1,11 @@
 int inc(int i, int x)
 {
-    int i = 1;
+    i = 1;
     return i+x;
 }
 int main()
 {
-    int j=0, a=1, b=1, fib[10];
+    int i=0, j=0, a=1, b=1, fib[10];
     while (j < 10)
     {
         int c = a+b;

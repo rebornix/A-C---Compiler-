@@ -67,7 +67,8 @@ ExtDef      :   Specifier   ExtDecList  SEMI{struct TreeNode *temp;
                                             temp = bindSibling(&$1, temp);
                                             $$.token = "ExtDef";
                                             bindParent(&$$, temp);}
-            |   Specifier   FunDec  CompSt {struct TreeNode *temp; 
+            |   Specifier   FunDec  CompSt {
+                                            struct TreeNode *temp; 
                                             temp = bindSibling(&$3, NULL);
                                             temp = bindSibling(&$2, temp);
                                             temp = bindSibling(&$1, temp);
@@ -167,7 +168,9 @@ ParamDec    :   Specifier   VarDec{ struct TreeNode *temp;
                                     bindParent(&$$, temp);}
             ;
 
-CompSt      :   LC  DefList StmtList    RC {  struct TreeNode *temp;
+CompSt      :   LC  DefList StmtList  RC { 
+                                            printf("-------------------CompSt-----------------\n");
+                                            struct TreeNode *temp;
                                              temp = bindSibling(&$4, NULL);
                                              temp = bindSibling(&$3, temp);
                                              temp = bindSibling(&$2, temp);
@@ -217,7 +220,9 @@ Stmt        :   Exp SEMI { struct TreeNode *temp;
                                              temp = bindSibling(&$1, temp);
                                              $$.token = "Stmt";
                                              bindParent(&$$, temp); }
-            |   WHILE   LP  Exp RP  Stmt{  struct TreeNode *temp;
+            |   WHILE   LP  Exp RP  Stmt{ 
+                                            printf("---------------------While-------------------- \n");
+                                             struct TreeNode *temp;
                                              temp = bindSibling(&$5, NULL);
                                              temp = bindSibling(&$4, temp);
                                              temp = bindSibling(&$3, temp);

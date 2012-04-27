@@ -1,5 +1,9 @@
+int func()
+{
+}
 int main()
 {
-    int i, j;
-    i = j();
+    int i;
+    float j;
+    i = j + 1;
 }
