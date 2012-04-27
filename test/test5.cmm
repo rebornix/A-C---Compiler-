@@ -1,8 +1,21 @@
+int inc(int a, int b)
+{
+    return 1;
+}
+int func(int p, int q)
+{
+    return 1.1;
+}
 int main()
 {
-    int i;
+    int i, m, n;
     float j;
-    i = 012;
-    i = 0xAB1;
-    j = 4.1e2;
+    int array[10][10];
+    i = inc(1, 1) + array;
+    i = f();
+    i = inc(i);
+    i = m[1];
+    i = n();
+    i = array[1][1.5];
 }
+int main(){}

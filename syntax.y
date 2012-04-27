@@ -169,7 +169,6 @@ ParamDec    :   Specifier   VarDec{ struct TreeNode *temp;
             ;
 
 CompSt      :   LC  DefList StmtList  RC { 
-                                            printf("-------------------CompSt-----------------\n");
                                             struct TreeNode *temp;
                                              temp = bindSibling(&$4, NULL);
                                              temp = bindSibling(&$3, temp);

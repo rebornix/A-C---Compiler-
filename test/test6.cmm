@@ -1,6 +1,27 @@
+struct Complex
+{
+    int cpl;
+};
+struct Complex
+{
+    float fcpl;
+};
+int inc(struct Complex b){
+    return 0;
+}
 int main()
 {
-    // test
-    int i;
-    /* test */
+    int i, m, n;
+    int p[10], q[10];
+    struct Complex x[2];
+    struct Naive a;
+    i = m + -(-(--n));
+    i = n.i;
+    p = q[10];
+    p = q;
+    i = m = p[1] = 1;
+    i = m = p;
+    inc() = i;
+    1 = i;
+    1 + i = 2;
 }

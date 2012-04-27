@@ -152,242 +152,31 @@ void getType(Type type,  struct TreeNode* specifier)
         }
     }
 }
-int checkTypeEqual(Type firstType, Type thirdType)
+
+int lValueJudge(struct TreeNode* Exp)
 {
-    if( firstType->kind != thirdType->kind )
+    struct TreeNode* firstChild = Exp->firstChild;
+    if( strcmp( firstChild->token ,"ID" ) == 0 )
+    {
+        if( findFunc(firstChild->value) == 1 )
+            return 0;
+        else
+            return 1;
+    }
+    if( strcmp( firstChild->token, "INT" ) == 0 || strcmp( firstChild->token, "FLOAT" ) == 0 )
         return 0;
-    if( firstType->kind == basic ){
-        if( firstType->u.basic == thirdType->u.basic )
-            return 1;
-        else
+    if( strcmp( firstChild->token, "LP" ) == 0 || strcmp( firstChild->token, "MINUS" ) == 0 || strcmp( firstChild->token, "NOT") == 0)
+        return lValueJudge(firstChild->nextSibling);
+    // firstChild must be exp
+    if( firstChild->nextSibling != NULL && strcmp( firstChild->nextSibling->token, "ASSIGNOP") == 0) {
+        if( lValueJudge(firstChild->nextSibling->nextSibling) == 0)
             return 0;
-    }
-    if( firstType->kind == array ){
-        if ( firstType->u.array.size != thirdType->u.array.size )
+        if( lValueJudge(firstChild) == 0 )
             return 0;
-        else
-            return checkTypeEqual(firstType->u.array.elem, thirdType->u.array.elem);
-    }
-    if( firstType->kind == structure ){
-        if( strcmp(firstType->u.structure->name, thirdType->u.structure->name) == 0 )
-            return 1;
-        else
-            return 0;
-    }
+        }
     return 1;
 }
 
-void getExpType(Type sType, struct TreeNode* currentNode)
-{
-#ifdef DEBUG
-    printf("getExpType entry\n");
-#endif
-   if( strcmp( currentNode->token, "INT" ) == 0 ){
-       sType->kind = basic;
-       sType->u.basic = 0;
-       return ;
-   }
-   if( strcmp( currentNode->token, "FLOAT" ) == 0 ){
-       sType->kind = basic;
-       sType->u.basic = 1;
-       return ;
-   }
-   if( strcmp( currentNode->token, "ID" ) == 0 && currentNode->nextSibling == NULL ){
-        SyntaxNode itr = syntax_table;
-        while( itr != NULL ){
-            if( strcmp( itr->name, currentNode->value) == 0 )
-                break;
-            itr = itr->next;
-        }
-        if( itr == NULL ) {
-            return ;
-        }
-        if( itr->kind == variable ){
-            //sType = itr->u.type;  Fuck ! U can't reset the pointer !!! 
-            if( itr->u.type->kind == basic ){
-                sType->kind = basic;
-                sType->u.basic = itr->u.type->u.basic;
-            }
-            else if( itr->u.type->kind == array ){
-                sType->kind = array;
-                sType->u.array = itr->u.type->u.array;
-            }
-            else {
-                sType->kind = structure;
-                sType->u.structure = itr->u.type->u.structure;
-            }
-        }
-        else{
-         //   sType = itr->u.func.returnType;
-            sType->kind = itr->u.func.returnType->kind;
-            if( itr->u.func.returnType->kind == basic ) {
-                sType->kind = basic;
-                sType->u.basic = itr->u.func.returnType->u.basic;
-            }
-            else if ( itr->u.func.returnType->kind == array ) {
-                sType->kind = array;
-                sType->u.array = itr->u.func.returnType->u.array;
-            }
-            else{
-                sType->kind = structure;
-                sType->u.structure = itr->u.func.returnType->u.structure;
-            }
-        }
-        return ;
-   }
-   if( strcmp( currentNode->token, "ID" ) == 0 && currentNode->nextSibling != NULL ){
-        if( findFunc(currentNode->value) == 0 )
-            return ; // check already done in expFunc, such a silly implementation
-        else{
-            SyntaxNode itr = syntax_table;
-            while( itr != NULL ){
-                if( strcmp(itr->name, currentNode->value) == 0 )
-                    break;
-                itr = itr->next;
-            }
-            if( itr->u.func.paramTypeList == NULL && strcmp(currentNode->nextSibling->nextSibling->token, "RP") == 0)
-                return ;
-            if( itr->u.func.paramTypeList == NULL && strcmp(currentNode->nextSibling->nextSibling->token, "RP") != 0){
-                printf("Error Type 9 at line %d: param number mismatched\n", currentNode->lineno);
-                return;
-            }
-            if( itr->u.func.paramTypeList != NULL && strcmp(currentNode->nextSibling->nextSibling->token, "RP") == 0){
-                printf("Error Type 9 at line %d: param number mismatched\n", currentNode->lineno);
-                return ;
-            }
-            if( checkParamType(itr->u.func.paramTypeList, currentNode->nextSibling->nextSibling) == 0 ){
-                printf("Error Type 9 at line %d: param number mismatched\n", currentNode->lineno);
-                return ;
-            }
-        }
-
-   }
-   if( strcmp( currentNode->token, "LP") == 0 || strcmp( currentNode->token, "MINUS") == 0 || strcmp( currentNode->token, "NOT") == 0 ){
-       getExpType(sType, currentNode->nextSibling);
-       return ;
-   }
-   if( strcmp( currentNode->token, "Exp" ) == 0 ){
-       if( currentNode->nextSibling != NULL && strcmp(currentNode->nextSibling->token, "ASSIGNOP") == 0 ){
-           if( strcmp(currentNode->firstChild->token, "ID") == 0 ){
-               if( findFunc(currentNode->firstChild->value) == 1){
-                  printf("Error Type 6 at line %d: Rvalue can be Lvalue\n", currentNode->lineno);
-                  return ;
-               }
-               if( strcmp(currentNode->firstChild->token,"INT") == 0 || strcmp(currentNode->firstChild->token,"FLOAT") == 0 ){
-                  printf("Error Type 6 at line %d: Rvalue can be Lvalue\n", currentNode->lineno);
-                  return ;
-               }
-           }
-           Type firstType = (Type)malloc(sizeof(struct Type_));
-           Type thirdType = (Type)malloc(sizeof(struct Type_));
-           getExpType(firstType, currentNode->firstChild);
-           getExpType(thirdType, currentNode->nextSibling->nextSibling->firstChild);
-           if( checkTypeEqual(firstType, thirdType) == 0 ){
-               printf("Error Type 5 at line %d : Type mismatched\n", currentNode->lineno);
-           }
-           return ;
-       }
-       if( currentNode->nextSibling != NULL && strcmp(currentNode->nextSibling->token, "DOT") == 0 ){
-       }
-       if( currentNode->nextSibling != NULL && ( strcmp(currentNode->nextSibling->token, "AND") == 0 || 
-                   strcmp(currentNode->nextSibling->token, "OR") == 0 ||
-                   strcmp(currentNode->nextSibling->token, "RELOP") == 0 ||
-                   strcmp(currentNode->nextSibling->token, "PLUS") == 0 ||
-                   strcmp(currentNode->nextSibling->token, "MINUS") == 0 ||
-                   strcmp(currentNode->nextSibling->token, "STAR") == 0 ||
-                   strcmp(currentNode->nextSibling->token, "DIV") == 0 ))
-       {
-           Type firstType = (Type)malloc(sizeof(struct Type_));
-           Type thirdType = (Type)malloc(sizeof(struct Type_));
-           getExpType(firstType, currentNode->firstChild);
-           getExpType(thirdType, currentNode->nextSibling->nextSibling->firstChild);
-           if( checkTypeEqual(firstType, thirdType) == 0 ){
-               printf("Error Type 7 at line %d \n", currentNode->lineno);
-           }
-           return ;
-       }
-       if( currentNode->nextSibling != NULL && (strcmp(currentNode->nextSibling->token, "LB") == 0)){
-           Type firstType = (Type)malloc(sizeof(struct Type_));
-           Type thirdType = (Type)malloc(sizeof(struct Type_));
-           getExpType(firstType, currentNode->firstChild);
-           getExpType(thirdType, currentNode->nextSibling->nextSibling->firstChild);
-           if( firstType->kind != array ){
-               printf("Error Type 10 at line %d\n", currentNode->lineno);
-               sType->kind = firstType->kind;
-               if(sType->kind == basic )
-                   sType->u.basic = firstType->u.basic;
-               else
-                   sType->u.structure = sType->u.structure;
-               return ;
-           }
-           else{
-              if(thirdType->kind != basic || thirdType->u.basic != 0 ){
-                  printf("Error Type 12 at line %d \n", currentNode->lineno);
-                  sType->kind  = firstType->u.array.elem->kind;
-                  if( sType->kind == basic )
-                      sType->u.basic = firstType->u.array.elem->u.basic;
-                  else if ( sType->kind == array )
-                      sType->u.array = firstType->u.array.elem->u.array;
-                  else
-                      sType->u.structure = firstType->u.array.elem->u.structure;
-              }
-              else {
-                  sType->kind  = firstType->u.array.elem->kind;
-                  if( sType->kind == basic )
-                      sType->u.basic = firstType->u.array.elem->u.basic;
-                  else if ( sType->kind == array )
-                      sType->u.array = firstType->u.array.elem->u.array;
-                  else
-                      sType->u.structure = firstType->u.array.elem->u.structure;
-              }
-           }
-           return ;
-       }
-       getExpType(sType, currentNode->firstChild);
-       return ;
-   }
-   return ;
-}
-int checkParamType(FieldList paramTypeList, struct TreeNode* Args)
-{
-    FieldList pitr = paramTypeList;
-    struct TreeNode* titr = Args;
-    if( pitr == NULL && titr == NULL )
-        return 1;
-    if( pitr != NULL && titr != NULL ){
-        Type param = pitr->type;
-
-        Type expType = (Type)malloc(sizeof(struct Type_));
-        getExpType(expType, titr->firstChild);
-        if( checkTypeEqual(param, expType) == 1 ){
-            pitr = pitr->tail;
-            if( titr->firstChild->nextSibling == NULL )
-                titr = NULL;
-            else
-                titr = titr->firstChild->nextSibling->nextSibling;
-            return checkParamType(pitr, titr);
-        }
-        else {
-            return 0;
-        }
-    }
-    return 0;
-}
-void returnTypeJudge(struct TreeNode* Exp)
-{
-    Type type = (Type)malloc(sizeof(struct Type_));
-    getExpType(type, Exp);
-    SyntaxNode itr = syntax_table;
-    SyntaxNode func = syntax_table;
-    while( itr != NULL ){
-        if( itr->kind == function )
-            func = itr;
-        itr = itr->next;
-    }
-    Type returnType = func->u.func.returnType;
-    if( checkTypeEqual(type, returnType) == 0 )
-        printf("Error Type 8 at line %d: return type mismatch\n", Exp->lineno);
-}
 void addVarDec(Type type, struct TreeNode* VarDec)
 {
 #ifdef DEBUG
@@ -540,9 +329,13 @@ void addFunDec(Type returnType, struct TreeNode* FunDec)
                 newNode->u.func.paramTypeList->type->kind = typeList->kind;
                 if(typeList->kind == basic)
                    newNode->u.func.paramTypeList->type->u.basic = typeList->u.basic;
-                /*
-                 * struct undone
-                 */
+                if(typeList->kind == array ){
+                    newNode->u.func.paramTypeList->type->u.array.size = typeList->u.array.size;
+                    newNode->u.func.paramTypeList->type->u.array.elem = typeList->u.array.elem;
+                }
+                if(typeList->kind == structure){
+                    newNode->u.func.paramTypeList->type->u.structure = typeList->u.structure;
+                }
             }
             else{
                 FieldList param = newNode->u.func.paramTypeList;
@@ -595,10 +388,6 @@ void expFunc(struct TreeNode* Exp)
 #ifdef DEBUG
             printf("Exp ... Exp\n");
 #endif
-            /*
-             * type check
-             */
-            
             expFunc( firstChild->nextSibling->nextSibling );
         }
 
@@ -630,157 +419,5 @@ void expFunc(struct TreeNode* Exp)
         expFunc( firstChild->nextSibling );
     }
 }
-void traverseInit(struct TreeNode* head, int depth)
-{
-#ifdef DEBUG
-    struct TreeNode *child;
-    int i;
 
-    if(head->token != NULL){
-        for(i = 0; i != depth; ++i)
-            printf("  ");
-        if(tokenJudge(head->token)){
-            if( strcmp(head->token, "INT") == 0)
-                printf("%s:%d\n", head->token, head->ival);
-            else if ( strcmp( head->token , "FLOAT") == 0)
-                printf("%s:%.6f\n", head->token, head->dval);
-            else if (strcmp(head->token, "ID") == 0 )
-                printf("%s: %s\n", head->token, head->value);
-            else
-                printf("%s\n", head->token);
-        }
-        else
-            printf("%s(%d)\n", head->token, head->lineno);
 
-        if(head->firstChild != NULL) {
-            traverseInit(head->firstChild, depth+1);
-        } 
-        if(head->nextSibling == NULL){
-        }
-        else{
-            traverseInit(head->nextSibling, depth);
-        }
-    }
-    else{
-        if( head->nextSibling != NULL)
-            traverseInit(head->nextSibling, depth);
-    }
-#endif
-}
-void traverse(struct TreeNode* head)
-{
-    struct TreeNode *child;
-    int i;
-    
-     if(head->token != NULL){
-        //Add to Syntax table
-        if( strcmp(head->token,"ExtDef") == 0 ) { //ExtDef : Specifier
-
-            /*
-             * get type from Specifier
-             */
-            struct TreeNode* specifier = head->firstChild;
-            Type type = (Type)malloc(sizeof(struct Type_));
-            getType(type, specifier);
-            /*
-             * get Varlist or func list
-             */
-            struct TreeNode* secondChild = specifier->nextSibling;
-            if( strcmp(secondChild->token, "ExtDecList") == 0 ){
-                addExtDecList(type, secondChild);
-            }
-            else if( strcmp(secondChild->token, "FunDec")== 0 ){
-              addFunDec(type, secondChild);
-            }
-        }
-        if( strcmp(head->token, "Def") == 0){ // Def: Specifier DecList SEMI
-            struct TreeNode* specifier = head->firstChild;
-            Type type = (Type)malloc(sizeof(struct Type_));
-            getType(type, specifier);
-            struct TreeNode* DecList = specifier->nextSibling;
-            addDec(type, DecList);
-        }
-
-        if( strcmp(head->token, "RETURN") == 0 ){
-            /*
-             * check the return type
-             */
-            returnTypeJudge(head->nextSibling);
-        }
-        /*
-         * Traverse the syntax table to look for the variable or function
-         */
-        if( strcmp(head->token, "Exp") == 0 ){
-            expFunc(head);
-            Type sType = (Type)malloc(sizeof(struct Type_));
-            getExpType(sType, head);
-            if( head->nextSibling != NULL && strcmp(head->nextSibling->token, "RP") == 0){
-                if( head->nextSibling->nextSibling != NULL && strcmp( head->nextSibling->nextSibling->token,"Stmt") == 0)
-                    traverse(head->nextSibling->nextSibling);
-            }
-            return; // if not return , the child Exp will be checked several times
-        }
-
-        /*
-         * recursive
-         */
-        if(head->firstChild != NULL) {
-             traverse(head->firstChild);
-        } 
-        if(head->nextSibling == NULL){
-        }
-        else{
-            traverse(head->nextSibling);
-        }
-    }
-     else{
-        if( head->nextSibling != NULL )
-            traverse(head->nextSibling);
-     }
-}
-
-struct TreeNode* bindSibling(struct TreeNode *left, struct TreeNode * right)
-{
-   struct TreeNode *temp = (struct TreeNode *)malloc(sizeof(struct TreeNode ));
-   *temp = *left;
-   temp->nextSibling = right;
-   //printf("bind sibling");
-   return temp;
-}
-struct TreeNode* bindParent(struct TreeNode *parent, struct TreeNode *child){
-    parent->firstChild = child;
-    return parent;
-   // printf("bind parent ");
-}
-
-void trav_syn_table(){
-#ifdef DEBUG
-    SyntaxNode itr = syntax_table;
-    printf("######   traverse the syntax table   ######\n");
-    while( itr != NULL ){
-        printf("%s: ", itr->name);
-        if( itr->kind == function ){
-            printf("count: %d\n", itr->u.func.paramCount);
-            FieldList newList = itr->u.func.paramTypeList;
-            while(newList!=NULL){
-                printf("type %s\n", newList->name);
-                newList = newList->tail;
-            }
-        }
-        else if (itr->kind == variable ){
-            if( itr->u.type->kind == basic ){
-                printf(" basic: %d\n", itr->u.type->u.basic);
-            }
-            else if( itr->u.type->kind == array ){
-                printf(" array: size[%d][%d]\n", itr->u.type->u.array.size, itr->u.type->u.array.elem->u.array.size);
-                
-            }
-            else{
-                printf(" %s ", itr->u.type->u.structure->name);
-                printf("structure\n");
-            }
-        }
-        itr = itr->next;
-    }
-#endif
-}
