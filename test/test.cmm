@@ -1,9 +1,0 @@
-int func()
-{
-}
-int main()
-{
-    int i;
-    float j;
-    i = j + 1;
-}

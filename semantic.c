@@ -36,11 +36,7 @@ void traverse(struct TreeNode* head)
             struct TreeNode* DecList = specifier->nextSibling;
             addDec(type, DecList);
         }
-
         if( strcmp(head->token, "RETURN") == 0 ){
-            /*
-             * check the return type
-             */
             returnTypeJudge(head->nextSibling);
         }
         /*
