@@ -6,7 +6,7 @@ digit   [0-9]
 letter  [a-zA-Z]
 delim   [ \t\n]
 ws      {delim}+
-INT     (-?[1-9]{digit}*)|[0]
+INT     ([1-9]{digit}*)|[0]
 INT_8   [0]([0-7]+)
 INT_16  [0](("x")|("X"))([0-9A-Fa-f]+)
 FLOAT   ({digit}(\.{digit})?)((("e")|("E"))[+-]?{digit})?
@@ -142,7 +142,7 @@ int yylineno = 1;
 "struct"  { yylval.node = initial((int)yylineno, (char*)yytext, "STRUCT");return STRUCT; }
 "return"  { yylval.node = initial((int)yylineno, (char*)yytext, "RETURN");return RETURN; }
 "if"      { yylval.node = initial((int)yylineno, (char*)yytext, "IF");return IF; }
-"Else"    { yylval.node = initial((int)yylineno, (char*)yytext, "ELSE");return ELSE; }
+"else"    { yylval.node = initial((int)yylineno, (char*)yytext, "ELSE");return ELSE; }
 "while"   { yylval.node = initial((int)yylineno, (char*)yytext, "WHILE");return WHILE; }
 {Identity}    { yylval.node = initial((int)yylineno, (char*)yytext, "ID");
                 return ID; }
@@ -184,7 +184,7 @@ initial(int lineno, char* value, char* token)
     struct TreeNode node;
     if( token != "INT" || token != "FLOAT") {
         node.value = malloc(32);
-        memcpy(node.value, value +'\0', 32); // \0 is a must
+        memcpy(node.value, value +'\0', 32); // \0 is a must, because I use memcpy instead of strcpy
     }
     node.token = token;
     node.nextSibling = NULL;

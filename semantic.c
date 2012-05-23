@@ -1,7 +1,7 @@
 #include"stable.h"
 #include<stdlib.h>
 #include<string.h>
-//#define DEBUG
+#define DEBUG
 #define COMPILE
 void traverse(struct TreeNode* head)
 {
@@ -76,6 +76,7 @@ void trav_syn_table(){
     SyntaxNode itr = syntax_table;
     printf("######   traverse the syntax table   ######\n");
     while( itr != NULL ){
+        printf("#\n");
         printf("%s: ", itr->name);
         if( itr->kind == function ){
             printf("count: %d\n", itr->u.func.paramCount);

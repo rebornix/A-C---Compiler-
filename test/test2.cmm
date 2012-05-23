@@ -1,13 +1,18 @@
+int fact(int n)
+{
+    if (n == 1)
+        return n;
+    else
+        return (n*fact(n-1));
+}
 int main()
 {
-    int i=0, a=1, b=1, fib[10];
-    while (i < 10)
-    {
-        int c = a+b;
-        fib[i] = b;
-        a = b;
-        b = c;
-        i = i + 1;
-    }
+    int m, result;
+    m = read();
+    if (m > 1)
+        result = fact(m);
+    else
+        result = 1;
+    write(result);
+    return 0;
 }
-

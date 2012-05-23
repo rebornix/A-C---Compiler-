@@ -21,8 +21,7 @@ int errorJudge = 0;
 %token <node>  FLOAT 
 %token <node>  TYPE
 
-%nonassoc LOWER_THAN_ELSE
-%nonassoc ELSE
+
 
 %right ASSIGNOP
 %left  OR
@@ -32,6 +31,9 @@ int errorJudge = 0;
 %left   STAR DIV
 %right  NOT 
 %left  LB RB LP RP DOT
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %type <node> Program ExtDefList ExtDef ExtDecList Specifier StructSpecifier OptTag Tag VarDec FunDec  VarList ParamDec
 %type <node> CompSt StmtList Stmt DefList Def DecList Dec Exp Args 
@@ -45,9 +47,14 @@ Program     :   ExtDefList  {   struct TreeNode *temp;
                                 if(errorJudge == 0){
                                     traverseInit(temp, 0);
                                     traverse(temp);
-                                    }
-                                trav_syn_table();
+                                    trav_syn_table();
+                                    printf("IRTraverse------\n");
+                                    IRTraverse(temp);
+                                    IROutput();
                                 }
+                                
+                                }
+                                
             ;
 ExtDefList  :   ExtDef  ExtDefList { struct TreeNode *temp; 
                                      temp = bindSibling(&$2, NULL);
@@ -202,14 +209,21 @@ Stmt        :   Exp SEMI { struct TreeNode *temp;
                                              temp = bindSibling(&$1, temp);
                                              $$.token = "Stmt";
                                              bindParent(&$$, temp); }
-            |   IF  LP  Exp RP  Stmt  %prec LOWER_THAN_ELSE{  struct TreeNode *temp;
-                                             temp = bindSibling(&$4, NULL);
+                                             
+            |   IF  LP  Exp RP  Stmt  %prec LOWER_THAN_ELSE { 
+                                             printf("---------------------IF----------------------\n");
+                                             struct TreeNode *temp;
+                                             temp = bindSibling(&$5, NULL); // error again , I miss this (stmt)
+                                             temp = bindSibling(&$4, temp);
                                              temp = bindSibling(&$3, temp);
                                              temp = bindSibling(&$2, temp);
                                              temp = bindSibling(&$1, temp);
                                              $$.token = "Stmt";
-                                             bindParent(&$$, temp); }
-            |   IF  LP  Exp RP  Stmt    ELSE    Stmt{  struct TreeNode *temp;
+                                             bindParent(&$$, temp); 
+                                             }
+            |   IF  LP  Exp RP  Stmt ELSE  Stmt{ 
+                                            printf("----------if else ---------------\n");
+                                             struct TreeNode *temp;
                                              temp = bindSibling(&$7, NULL);
                                              temp = bindSibling(&$6, temp);
                                              temp = bindSibling(&$5, temp);
@@ -218,7 +232,8 @@ Stmt        :   Exp SEMI { struct TreeNode *temp;
                                              temp = bindSibling(&$2, temp);
                                              temp = bindSibling(&$1, temp);
                                              $$.token = "Stmt";
-                                             bindParent(&$$, temp); }
+                                             bindParent(&$$, temp); 
+                                             }
             |   WHILE   LP  Exp RP  Stmt{ 
                                             printf("---------------------While-------------------- \n");
                                              struct TreeNode *temp;
@@ -386,7 +401,7 @@ Args        :   Exp   COMMA   Args{    struct TreeNode *temp;
 
 CompSt      :   error RC    { struct TreeNode *temp;
                                         temp = bindSibling(&$2, NULL);
-                                        $$.token = "Compt";
+                                        $$.token = "CompSt";
                                         bindParent(&$$, temp);}
          ;
 Exp     :   Exp LB error RB { struct TreeNode *temp;

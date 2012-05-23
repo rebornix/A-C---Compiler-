@@ -6,6 +6,34 @@
 void init_table()
 {
     syntax_table = NULL;
+    /*
+     * add READ and WRITE
+     */
+    SyntaxNode readNode = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
+    readNode->name = malloc(32);
+    memcpy(readNode->name, "read", 32);
+    readNode->kind = function;
+    readNode->next = NULL; 
+    readNode->u.func.returnType = (Type)malloc(sizeof(struct Type_));
+    readNode->u.func.returnType->kind = basic;
+    readNode->u.func.returnType->u.basic = 0;
+
+    SyntaxNode writeNode = (SyntaxNode)malloc(sizeof(struct SyntaxNode_));
+    writeNode->name = malloc(32);
+    memcpy(writeNode->name, "write", 32);
+    writeNode->kind = function;
+    writeNode->next = NULL;  
+    writeNode->u.func.paramCount = 1;
+    writeNode->u.func.paramTypeList = (FieldList)malloc(sizeof(struct FieldList_));
+    writeNode->u.func.paramTypeList->name = malloc(32);
+    memcpy(writeNode->u.func.paramTypeList->name, "temp", 32);
+    writeNode->u.func.paramTypeList->type = (Type)malloc(sizeof(struct Type_));
+    writeNode->u.func.paramTypeList->type->kind = basic;
+    writeNode->u.func.paramTypeList->type->u.basic = 0;
+    writeNode->u.func.paramTypeList->tail = NULL;
+
+    readNode->next = writeNode;
+    syntax_table = readNode;
 }
 
 void getType(Type type,  struct TreeNode* specifier)
