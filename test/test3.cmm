@@ -1,0 +1,6 @@
+int main()
+{
+    int array[3][4];
+    array[0][0] = 1;
+    return 0;
+}

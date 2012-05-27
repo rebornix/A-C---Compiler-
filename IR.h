@@ -6,7 +6,7 @@ typedef struct InterCodes_* InterCodes;
 typedef struct ArgList_* ArgList;
 
 struct Operand_ {
-    enum {TEMP, VARIABLE, CONSTANT, ADDRESS, LABELOP, OP} kind;
+    enum {TEMP, VARIABLE, CONSTANT, ADDRESS, LABELOP, OP, REFERENCE} kind;
     union {
         int temp_no;
         int var_no;
@@ -17,7 +17,7 @@ struct Operand_ {
 };
 
 struct InterCode_ {
-    enum { ASSIGN, ADD, SUB, MUL, DIV, RETURN, LABEL_CODE, LABEL_TRUE, LABEL_GOTO, READ, CALLFUNC, WRITE, ARG, FUNCTION } kind;
+    enum { ASSIGN, ADD, SUB, MUL, DIV, RETURN, LABEL_CODE, LABEL_TRUE, LABEL_GOTO, READ, CALLFUNC, WRITE, ARG, FUNCTION, PARAM, REFASSIGN, DEC } kind;
     union {
         struct { Operand right, left; } assign;
         struct { Operand result, op1, op2; } binop;
@@ -30,6 +30,8 @@ struct InterCode_ {
         struct { Operand arg; } write;
         struct { Operand arg; } arg;
         struct { char *name; } function;
+        struct { Operand param; } param;
+        struct { Operand op; int size; } dec;
     } u;
 };
 
@@ -65,3 +67,4 @@ Operand new_label();
 InterCodes new_label_code(Operand);
 Operand new_temp();
 InterCodes new_place_code(Operand, int);
+InterCodes arrayAddress(struct TreeNode *Exp, Operand place, Operand pos, Type arrayType);

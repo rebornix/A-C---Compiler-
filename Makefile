@@ -1,5 +1,5 @@
 run: parser
-	./parser test/test2.cmm
+	./parser in
 parser: syntax.tab.c lex.yy.c stable.c judge.c grammer.c semantic.c IR.c
 	gcc syntax.tab.c stable.c judge.c grammer.c semantic.c IR.c -lfl -ly -o parser
 syntax.tab.c: syntax.y 

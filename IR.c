@@ -42,6 +42,35 @@ int lookup(struct TreeNode* ID)
     }
     return num;
 }
+int lookupName(char * name)
+{ 
+    SyntaxNode itr = syntax_table;
+    int num = 0; 
+    while( itr != NULL ){
+        printf("#\n");
+        if( itr->kind == variable){
+            printf("num: %d\n", num);
+            num++;
+        }
+        if( strcmp(itr->name, name) == 0){
+            break;
+        }
+        itr = itr->next;
+    }
+    return num;
+}
+SyntaxNode lookupvar(struct TreeNode* ID)
+{
+    SyntaxNode itr = syntax_table;
+    while( itr != NULL ){
+        if( itr->kind == variable){
+            if( strcmp(itr->name, ID->value) == 0)
+                return itr;
+        }
+        itr = itr->next;
+    }
+
+}
 SyntaxNode lookupfunc(struct TreeNode* ID)
 {
     SyntaxNode itr = syntax_table;
@@ -230,7 +259,6 @@ InterCodes translate_Exp(struct TreeNode* Exp, SyntaxNode sym_table , Operand pl
                 ArgList arg_list = (ArgList)malloc(sizeof(struct ArgList_));
                 arg_list->param = NULL;
                 InterCodes code1 = translate_Args(ID->nextSibling->nextSibling, sym_table, arg_list);
-                printf("%d\n", code1);
                 if( strcmp(function->name, "write") == 0 ) {
                     printf("write\n");
                     InterCodes writeCode = (InterCodes)malloc(sizeof(struct InterCodes_));
@@ -348,35 +376,48 @@ InterCodes translate_Exp(struct TreeNode* Exp, SyntaxNode sym_table , Operand pl
             Operand t1 = new_temp();
             printf("temp: t%d\n", t1->u.temp_no);
             InterCodes code1 = translate_Exp(Exp2, syntax_table, t1);
-
-            InterCodes code2_1 = (InterCodes)malloc(sizeof(struct InterCodes_));
-            InterCodes code2_2 = (InterCodes)malloc(sizeof(struct InterCodes_));
-            code2_1->code = (InterCode)malloc(sizeof(struct InterCode_));
-            code2_1->code->kind = ASSIGN;
-            code2_1->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
-            code2_1->code->u.assign.right = copyPlace(t1);
-            code2_1->code->u.assign.left = (Operand)malloc(sizeof(struct Operand_));
-            code2_1->code->u.assign.left->kind = VARIABLE;
             /*
              * TODO Only Exp -> ID is considered
              */
-            code2_1->code->u.assign.left->u.var_no = lookup(Exp1);
-            code2_1->prev = code2_1->next = code2_1;
+            if( strcmp(Exp1->firstChild->token ,"ID") == 0 ){
+                InterCodes code2_1 = (InterCodes)malloc(sizeof(struct InterCodes_));
+                InterCodes code2_2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+                code2_1->code = (InterCode)malloc(sizeof(struct InterCode_));
+                code2_1->code->kind = ASSIGN;
+                code2_1->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
+                code2_1->code->u.assign.right = copyPlace(t1);
+                code2_1->code->u.assign.left = (Operand)malloc(sizeof(struct Operand_));
+                code2_1->code->u.assign.left->kind = VARIABLE;
+                code2_1->code->u.assign.left->u.var_no = lookup(Exp1->firstChild);
+                code2_1->prev = code2_1->next = code2_1;
 
-            code2_2->code = (InterCode)malloc(sizeof(struct InterCode_));
-            code2_2->code->kind = ASSIGN;
-            code2_2->code->u.assign.left = place;
-            code2_2->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
-            code2_2->code->u.assign.right->kind = VARIABLE;
-            code2_2->code->u.assign.right->u.var_no = lookup(Exp1);
-            code2_2->prev = code2_2->next = code2_2;
+                code2_2->code = (InterCode)malloc(sizeof(struct InterCode_));
+                code2_2->code->kind = ASSIGN;
+                code2_2->code->u.assign.left = place;
+                code2_2->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
+                code2_2->code->u.assign.right->kind = VARIABLE;
+                code2_2->code->u.assign.right->u.var_no = lookup(Exp1);
+                code2_2->prev = code2_2->next = code2_2;
 
-            bindCode(code2_1, code2_2);
-            /*
-             * code1 + code2
-             */
-            bindCode(code1, code2_1);
-            return code1;
+                bindCode(code2_1, code2_2);
+                /*
+                 * code1 + code2
+                 */
+                bindCode(code1, code2_1);
+                return code1;
+            }
+            else {
+                InterCodes code =  translate_Exp(Exp1, sym_table, place);
+                bindCode(code, code1);
+                InterCodes code2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+                code2->prev = code2->next = code2;
+                code2->code = (InterCode)malloc(sizeof(struct InterCode_));
+                code2->code->kind = REFASSIGN;
+                code2->code->u.assign.left = copyPlace(place);
+                code2->code->u.assign.right = copyPlace(t1);
+                bindCode(code, code2);
+                return code;
+            }
         }
         if( strcmp(Exp1->nextSibling->token, "PLUS") == 0 ){
             printf("PLUS\n");
@@ -456,6 +497,158 @@ InterCodes translate_Exp(struct TreeNode* Exp, SyntaxNode sym_table , Operand pl
             bindCode(code0, code2);
             bindCode(code0, new_label_code(label2));
             return code0;   
+        }
+        if( strcmp( Exp1->nextSibling->token, "LB") == 0 ){
+            printf("LB--------------------------\n");
+            Type type = (Type)malloc(sizeof(struct Type_));
+            InterCodes code1 =  arrayAddress(Exp1, place, NULL, type);
+
+            /*
+             * TODO right postion
+             */
+            /*
+            printf("rightPlace\n");
+            Operand rightPlace = new_temp();
+            InterCodes rightCode = translate_Exp(Exp1->nextSibling->nextSibling, sym_table, rightPlace);
+          //  place = rightPlace
+            bindCode(code1, rightCode);
+            
+            InterCodes code2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+            code2->prev = code2->next = code2;
+            code2->code = (InterCode)malloc(sizeof(struct InterCode_));
+            code2->code->kind = REFASSIGN;
+            code2->code->u.assign.left = copyPlace(place);
+            code2->code->u.assign.right = (Operand;
+            bindCode(code1, code2);
+            printf("return code1\n");
+            */
+            return code1;
+        }
+    }
+}
+int arrayShift(Type type)
+{
+    if( type->kind == basic ) {
+        printf("basic\n");
+        return 1;
+    }
+    
+    printf("arrayShift size : %d\n", type->u.array.size);
+    Type elem = type->u.array.elem;
+    if( elem->kind == basic )
+        return 1;
+    else {
+        int sum = 1;
+        while( elem->kind != basic ){
+            sum = sum * elem->u.array.size;
+            elem = elem->u.array.elem;
+        }
+        return sum;
+    }
+}
+Operand getPos(struct TreeNode* Exp){
+    /*
+     * only do with int TODO
+     */
+    Operand pos = (Operand)malloc(sizeof(struct Operand_));
+    if( strcmp( Exp->firstChild->token, "INT") == 0 ){
+        pos->kind = CONSTANT;
+        pos->u.value = Exp->firstChild->ival;
+        return pos;
+    }
+}
+InterCodes arrayAddress(struct TreeNode *Exp, Operand place, Operand pos, Type arrayType)
+{
+    printf("arrayAddress\n");
+    if(Exp->nextSibling != NULL &&  strcmp(Exp->nextSibling->token, "LB") == 0) {
+        printf("LB\n");
+        Operand place1 = new_temp();
+        Type type = (Type)malloc(sizeof(struct Type_));
+        Operand pos2 = getPos(Exp->nextSibling->nextSibling);
+        /*
+         * override place1 as place
+         */
+        InterCodes code1 = arrayAddress(Exp->firstChild, place1, pos2, type);
+        printf("after invoke arrayAddress\n");
+        arrayType->kind = type->u.array.elem->kind;
+        if( arrayType->kind == basic )
+            arrayType->u.basic = type->u.array.elem->u.basic;
+        else if ( arrayType->kind == array ){
+            arrayType->u.array.size = type->u.array.elem->u.array.size;
+            arrayType->u.array.elem = type->u.array.elem->u.array.elem;
+        }
+        int shift = arrayShift(arrayType);
+        if( pos == NULL ) {
+           InterCodes code2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+           code2->prev = code2->next = code2;
+           code2->code = (InterCode)malloc(sizeof(struct InterCode_));
+           code2->code->kind = ASSIGN;
+           code2->code->u.assign.left = copyPlace(place);
+           code2->code->u.assign.right = copyPlace(place1);
+           bindCode(code1, code2);
+           return code1;
+        }
+        else {
+            if( pos->kind == CONSTANT ) {
+                printf("t%d: t%d + %d\n", place->u.temp_no, place1->u.temp_no, shift*4*pos->u.value);
+                InterCodes code2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+                code2->prev = code2->next = code2;
+                code2->code = (InterCode)malloc(sizeof(struct InterCode_));
+                code2->code->kind = ADD;
+                code2->code->u.binop.result = copyPlace(place);
+                code2->code->u.binop.op1 = copyPlace(place1);
+                code2->code->u.binop.op2 = (Operand)malloc(sizeof(struct Operand_));
+                code2->code->u.binop.op2->kind = CONSTANT;
+                code2->code->u.binop.op2->u.value = shift*4*pos->u.value;
+                bindCode(code1, code2);
+                printf("#########\n");
+                return code1;
+            }
+        }
+    }
+    else {
+        printf("array ID\n");
+        struct TreeNode* ID = Exp;
+        SyntaxNode arrayNode = lookupvar(ID);
+        arrayType->kind = arrayNode->u.type->kind;
+        if( arrayType->kind == basic )
+            arrayType->u.basic = arrayNode->u.type->u.basic;
+        else if( arrayType->kind == array ) {
+            arrayType->u.array.size = arrayNode->u.type->u.array.size;
+            arrayType->u.array.elem = arrayNode->u.type->u.array.elem;
+        }
+
+        int shift = arrayShift(arrayType);
+        int totalsize = shift * arrayNode->u.type->u.array.size * 4;
+        InterCodes code0 = (InterCodes)malloc(sizeof(struct InterCodes_));
+        code0->prev = code0->next = code0;
+        code0->code = (InterCode)malloc(sizeof(struct InterCode_));
+        code0->code->kind = DEC;
+        code0->code->u.dec.op = (Operand)malloc(sizeof(struct Operand_));
+        code0->code->u.dec.op->kind = VARIABLE;
+        code0->code->u.dec.op->u.var_no = lookup(ID);
+        code0->code->u.dec.size = totalsize;
+        /*
+           place = new_temp();
+           place = &ID->value + shift*4 
+           */
+        if( pos->kind == CONSTANT){
+            printf("t%d = &%s + %d\n",place->u.temp_no,  ID->value, shift*4*pos->u.value);
+            InterCodes code = (InterCodes)malloc(sizeof(struct InterCodes_));
+            code->prev = code->next = code;
+            code->code = (InterCode)malloc(sizeof(struct InterCode_));
+            code->code->kind = ADD;
+            code->code->u.binop.result = copyPlace(place);
+            code->code->u.binop.op1 = (Operand)malloc(sizeof(struct Operand_));
+            code->code->u.binop.op1->kind = REFERENCE;
+            code->code->u.binop.op1->u.var_no = lookup(ID);
+
+            code->code->u.binop.op2 = (Operand)malloc(sizeof(struct Operand_));
+            code->code->u.binop.op2->kind = CONSTANT;
+            code->code->u.binop.op2->u.value = shift*4*pos->u.value;
+            bindCode(code0, code);
+            return code0;
+
         }
     }
 }
@@ -716,6 +909,30 @@ InterCodes translate_Stmt(struct TreeNode* Stmt, SyntaxNode sym_table){
     return NULL;
 }
 
+InterCodes translate_paramList(FieldList paramList, SyntaxNode sym_table){
+    InterCodes code1 = (InterCodes)malloc(sizeof(struct InterCodes_));
+    code1->prev = code1->next = code1;
+    code1->code = NULL;
+    while( paramList != NULL ){
+        int var_no = lookupName(paramList->name);
+        InterCodes paramCode = (InterCodes)malloc(sizeof(struct InterCodes_));
+        paramCode->prev = paramCode->next = paramCode;
+        paramCode->code = (InterCode)malloc(sizeof(struct InterCode_));
+        paramCode->code->kind = PARAM;
+        paramCode->code->u.param.param = (Operand)malloc(sizeof(struct Operand_));
+        paramCode->code->u.param.param->kind = VARIABLE;
+        paramCode->code->u.param.param->u.var_no = var_no;
+        if( code1->code == NULL ){
+            code1 = paramCode;
+        }
+        else{
+            bindCode(code1, paramCode);
+        }
+        paramList = paramList->tail;
+    }
+    return code1;
+}
+
 InterCodes translate_FunDec(struct TreeNode* FunDec, SyntaxNode sym_table){
     struct TreeNode* ID = FunDec->firstChild;
     SyntaxNode function = lookupfunc(ID);
@@ -725,6 +942,11 @@ InterCodes translate_FunDec(struct TreeNode* FunDec, SyntaxNode sym_table){
     func->code->kind = FUNCTION;
     func->code->u.function.name = malloc(32);
     memcpy(func->code->u.function.name, function->name+'\0', 32);
+    if( strcmp(ID->nextSibling->nextSibling->token, "VarList") == 0 ) {
+        FieldList paramTypeList = function->u.func.paramTypeList;
+        InterCodes param = translate_paramList(paramTypeList, sym_table);
+        bindCode(func, param);
+    }
     return func;
 }
 /*
@@ -767,6 +989,8 @@ void AddOutput(InterCodes itc){
         fprintf(fp, "t%d + ", op1->u.temp_no);
     else if ( op1->kind == CONSTANT )
         fprintf(fp, "#%d + ", op1->u.value);
+    else if ( op1->kind == REFERENCE )
+        fprintf(fp, "&v%d + ", op1->u.var_no);
 
     if( op2->kind == TEMP )
         fprintf(fp, "t%d\n", op2->u.temp_no);
@@ -883,6 +1107,17 @@ void ArgOutput(InterCodes itc) {
 void FunctionOutput(InterCodes itc){
     fprintf(fp, "FUNCTION %s :\n", itc->code->u.function.name);
 }
+void ParamOutput(InterCodes itc){
+    fprintf(fp, "PARAM v%d\n", itc->code->u.param.param->u.temp_no);
+}
+void RefAssignOutput(InterCodes itc){
+    fprintf(fp, "*t%d", itc->code->u.assign.left->u.temp_no);
+    fprintf(fp, " := t%d\n", itc->code->u.assign.right->u.temp_no);
+}
+void DecOutput(InterCodes itc){
+    fprintf(fp, "DEC v%d", itc->code->u.dec.op->u.var_no);
+    fprintf(fp, " %d\n", itc->code->u.dec.size);
+}
 void IROutput()
 {
    //init();
@@ -917,6 +1152,13 @@ void IROutput()
             ArgOutput(itr);
         else if (itr->code->kind == FUNCTION)
             FunctionOutput(itr);
+        else if (itr->code->kind == PARAM)
+            ParamOutput(itr);
+        else if (itr->code->kind == REFASSIGN)
+            RefAssignOutput(itr);
+        else if (itr->code->kind == DEC)
+            DecOutput(itr);
+
         itr = itr->next;
         if( itr == interCodes )
             itr = NULL;
