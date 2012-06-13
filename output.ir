@@ -1,9 +1,17 @@
+FUNCTION fib :
+PARAM v1
+t1 := v1
+RETURN t1
 FUNCTION main :
-DEC v1 48
-t4 := &v1 + #0
-t3 := t4 + #0
-t1 := t3
-t2 := #1
-*t1 := t2
-t5 := #0
-RETURN t5
+t3 := #3
+v2 := t3
+t2 := v2
+t6 := #3
+ARG t6
+t5 := CALL fib
+v2 := t5
+t4 := v2
+t7 := v2
+WRITE t7
+t8 := #0
+RETURN t8

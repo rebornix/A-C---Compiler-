@@ -6,6 +6,21 @@
  */
 int tempVarCount = 0;
 int labelCount = 0;
+
+int getVarCount()
+{
+    SyntaxNode itr = syntax_table;
+    int num = 0;
+    while( itr != NULL ){
+        num++;
+        itr = itr->next;
+    }
+    return num;
+}
+int getTempCount()
+{
+    return tempVarCount;
+}
 void init()
 {
     printf("------- initial entry ------\n");
@@ -652,22 +667,128 @@ InterCodes arrayAddress(struct TreeNode *Exp, Operand place, Operand pos, Type a
         }
     }
 }
+InterCodes translate_Dec(struct TreeNode* Dec, SyntaxNode sym_table, Operand place)
+{
+    struct TreeNode* VarDec = Dec->firstChild;
+    if( VarDec->nextSibling == NULL )
+        return NULL;
+    else{
+        /*
+         * TODO VarDec may be ID or VarDec LB INT RB, the latter is not considered now
+         */
+        struct TreeNode* ID = VarDec->firstChild;
+
+        if( place == NULL )
+            place = new_temp();
+        Operand t1 = new_temp();
+        InterCodes code1 = translate_Exp(VarDec->nextSibling->nextSibling, syntax_table, t1);
+        InterCodes code2_1 = (InterCodes)malloc(sizeof(struct InterCodes_));
+        InterCodes code2_2 = (InterCodes)malloc(sizeof(struct InterCodes_));
+        code2_1->code = (InterCode)malloc(sizeof(struct InterCode_));
+        code2_1->code->kind = ASSIGN;
+        code2_1->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
+        code2_1->code->u.assign.right = copyPlace(t1);
+        code2_1->code->u.assign.left = (Operand)malloc(sizeof(struct Operand_));
+        code2_1->code->u.assign.left->kind = VARIABLE;
+        code2_1->code->u.assign.left->u.var_no = lookup(ID);
+        code2_1->prev = code2_1->next = code2_1;
+
+        code2_2->code = (InterCode)malloc(sizeof(struct InterCode_));
+        code2_2->code->kind = ASSIGN;
+        code2_2->code->u.assign.left = place;
+        code2_2->code->u.assign.right = (Operand)malloc(sizeof(struct Operand_));
+        code2_2->code->u.assign.right->kind = VARIABLE;
+        code2_2->code->u.assign.right->u.var_no = lookup(ID);
+        code2_2->prev = code2_2->next = code2_2;
+
+        bindCode(code2_1, code2_2);
+        /*
+         * code1 + code2
+         */
+        bindCode(code1, code2_1);
+        return code1;
+    }
+}
+InterCodes translate_DecList(struct TreeNode* DecList, SyntaxNode sym_table)
+{
+    struct TreeNode* Dec = DecList->firstChild;
+    if( Dec->nextSibling == NULL ){
+        InterCodes code1 = translate_Dec(Dec, sym_table, NULL);
+        return code1;
+    }
+    else {
+        InterCodes code1 = translate_Dec(Dec, sym_table, NULL);
+        InterCodes code2 = translate_DecList(Dec->nextSibling->nextSibling, sym_table);
+        if( code1 == NULL ){
+            if( code2 == NULL ) {
+                return NULL;
+            }
+            else {
+                return code2;
+            }
+        }
+        else{
+            if( code2 == NULL) 
+                return code1;
+            else {
+                bindCode(code1, code2);
+                return code1;
+            }
+        }
+    }
+
+}
+InterCodes translate_DefList(struct TreeNode* DefList, SyntaxNode sym_table)
+{
+    InterCodes code1, code2;
+    if( DefList->token == NULL )
+        return NULL;
+    code1 = translate_DecList(DefList->firstChild->firstChild->nextSibling, sym_table);
+    code2 = translate_DefList(DefList->firstChild->nextSibling, sym_table);
+    if( code2 == NULL )
+        return code1;
+    else{
+        if( code1 == NULL )
+            return code2;
+        else {
+            bindCode(code1, code2);
+            return code1;
+        }
+    }
+}
 InterCodes translate_CompSt(struct TreeNode* CompSt, SyntaxNode sym_table)
 {
+    printf("translate_compst entry\n");
+    struct TreeNode* DefList = CompSt->firstChild->nextSibling;
+    InterCodes code0 = translate_DefList(DefList, sym_table);
+    printf("translate deflist exit \n");
     struct TreeNode* StmtList = CompSt->firstChild->nextSibling->nextSibling;
+    if( StmtList->token == NULL )
+        return code0;
+
     struct TreeNode* Stmt = StmtList->firstChild;
     InterCodes code1 = translate_Stmt(Stmt, sym_table);
+    if( code0 == NULL )
+        code0 = code1;
+    else {
+        if( code1 != NULL )
+            bindCode(code0, code1);
+    }
     StmtList = Stmt->nextSibling;
     
     InterCodes code2;
     while(StmtList->token != NULL ){
         Stmt = StmtList->firstChild;
         code2 = translate_Stmt(Stmt, sym_table);
-        bind(code1, code2);
+        if( code0 == NULL )
+            code0 = code2;
+        else
+            bindCode(code0, code2);
+
         StmtList = Stmt->nextSibling;
     }
     
-    return code1;
+    return code0;
 }
 InterCodes translate_Cond(struct TreeNode* Exp, Operand label_true, Operand label_false, SyntaxNode sym_table) {
     printf("translate_Cond\n");
@@ -1108,7 +1229,7 @@ void FunctionOutput(InterCodes itc){
     fprintf(fp, "FUNCTION %s :\n", itc->code->u.function.name);
 }
 void ParamOutput(InterCodes itc){
-    fprintf(fp, "PARAM v%d\n", itc->code->u.param.param->u.temp_no);
+    fprintf(fp, "PARAM v%d\n", itc->code->u.param.param->u.var_no);
 }
 void RefAssignOutput(InterCodes itc){
     fprintf(fp, "*t%d", itc->code->u.assign.left->u.temp_no);
@@ -1180,6 +1301,15 @@ void IRTraverse(struct TreeNode* head)
                 bindCode(interCodes, code2);
             }
         }
+        if( strcmp(head->token, "CompSt") == 0){
+            if( interCodes == NULL )
+                interCodes = translate_CompSt(head, syntax_table);
+            else{
+                InterCodes code2 = translate_CompSt(head, syntax_table);
+                bindCode(interCodes, code2);
+            }
+        }
+        /*
         if( strcmp(head->token, "Stmt") == 0 ){
             printf("Stmt\n");
             if( interCodes == NULL ){
@@ -1195,6 +1325,7 @@ void IRTraverse(struct TreeNode* head)
             IRTraverse(head->nextSibling);
             return ;
         }
+        */
         /*
         if( strcmp(head->token, "Exp") == 0) {
             printf("head->token Exp\n");

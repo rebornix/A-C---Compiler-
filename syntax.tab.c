@@ -476,13 +476,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    42,    42,    59,    64,    66,    72,    77,    85,    89,
-      97,   102,   107,   115,   122,   126,   128,   134,   138,   146,
-     153,   160,   166,   171,   178,   188,   193,   195,   201,   206,
-     213,   224,   237,   248,   253,   257,   264,   268,   275,   279,
-     287,   293,   299,   305,   311,   317,   323,   329,   335,   341,
-     346,   351,   358,   364,   371,   377,   381,   385,   390,   396,
-     402,   407,   413,   418
+       0,    42,    42,    60,    65,    67,    73,    78,    86,    90,
+      98,   103,   108,   116,   123,   127,   129,   135,   139,   147,
+     154,   161,   167,   172,   179,   189,   194,   196,   202,   207,
+     214,   225,   238,   249,   254,   258,   265,   269,   276,   280,
+     288,   294,   300,   306,   312,   318,   324,   330,   336,   342,
+     347,   352,   359,   365,   372,   378,   382,   386,   391,   397,
+     403,   408,   414,   419
 };
 #endif
 
@@ -1526,6 +1526,7 @@ yyreduce:
                                     printf("IRTraverse------\n");
                                     IRTraverse(temp);
                                     IROutput();
+                                    DROutput();
                                 }
                                 
                                 }
@@ -1534,7 +1535,7 @@ yyreduce:
   case 3:
 
 /* Line 1806 of yacc.c  */
-#line 59 "syntax.y"
+#line 60 "syntax.y"
     { struct TreeNode *temp; 
                                      temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                      temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1545,14 +1546,14 @@ yyreduce:
   case 4:
 
 /* Line 1806 of yacc.c  */
-#line 64 "syntax.y"
+#line 65 "syntax.y"
     { (yyval.node).token = NULL; (yyval.node).nextSibling = NULL;  (yyval.node).firstChild = NULL; }
     break;
 
   case 5:
 
 /* Line 1806 of yacc.c  */
-#line 66 "syntax.y"
+#line 67 "syntax.y"
     {struct TreeNode *temp; 
                                             temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                             temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1564,7 +1565,7 @@ yyreduce:
   case 6:
 
 /* Line 1806 of yacc.c  */
-#line 72 "syntax.y"
+#line 73 "syntax.y"
     {struct TreeNode *temp; 
                                             temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                             temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1575,7 +1576,7 @@ yyreduce:
   case 7:
 
 /* Line 1806 of yacc.c  */
-#line 77 "syntax.y"
+#line 78 "syntax.y"
     {
                                             struct TreeNode *temp; 
                                             temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
@@ -1588,7 +1589,7 @@ yyreduce:
   case 8:
 
 /* Line 1806 of yacc.c  */
-#line 85 "syntax.y"
+#line 86 "syntax.y"
     { struct TreeNode *temp;
                      temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                      (yyval.node).token = "ExtDecList"; 
@@ -1598,7 +1599,7 @@ yyreduce:
   case 9:
 
 /* Line 1806 of yacc.c  */
-#line 89 "syntax.y"
+#line 90 "syntax.y"
     {struct TreeNode *temp; 
                                             temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                             temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1610,7 +1611,7 @@ yyreduce:
   case 10:
 
 /* Line 1806 of yacc.c  */
-#line 97 "syntax.y"
+#line 98 "syntax.y"
     { struct TreeNode *temp;
                          temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL); /* former: temp = bindSibling($$1, temp) ;*/
                          temp->firstChild = NULL;
@@ -1621,7 +1622,7 @@ yyreduce:
   case 11:
 
 /* Line 1806 of yacc.c  */
-#line 102 "syntax.y"
+#line 103 "syntax.y"
     { struct TreeNode *temp;
                      temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                      (yyval.node).token = "Specifier"; 
@@ -1631,7 +1632,7 @@ yyreduce:
   case 12:
 
 /* Line 1806 of yacc.c  */
-#line 107 "syntax.y"
+#line 108 "syntax.y"
     {struct TreeNode *temp; 
                                             temp = bindSibling(&(yyvsp[(5) - (5)].node), NULL);
                                             temp = bindSibling(&(yyvsp[(4) - (5)].node), temp);
@@ -1645,7 +1646,7 @@ yyreduce:
   case 13:
 
 /* Line 1806 of yacc.c  */
-#line 115 "syntax.y"
+#line 116 "syntax.y"
     { struct TreeNode *temp;
                             temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                             temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1657,7 +1658,7 @@ yyreduce:
   case 14:
 
 /* Line 1806 of yacc.c  */
-#line 122 "syntax.y"
+#line 123 "syntax.y"
     { struct TreeNode *temp;
                      temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                      (yyval.node).token = "OptTag"; 
@@ -1667,14 +1668,14 @@ yyreduce:
   case 15:
 
 /* Line 1806 of yacc.c  */
-#line 126 "syntax.y"
+#line 127 "syntax.y"
     { (yyval.node).token = NULL; (yyval.node).nextSibling = NULL;  (yyval.node).firstChild = NULL; }
     break;
 
   case 16:
 
 /* Line 1806 of yacc.c  */
-#line 128 "syntax.y"
+#line 129 "syntax.y"
     { struct TreeNode *temp;
                      temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                      (yyval.node).token = "Tag"; 
@@ -1684,7 +1685,7 @@ yyreduce:
   case 17:
 
 /* Line 1806 of yacc.c  */
-#line 134 "syntax.y"
+#line 135 "syntax.y"
     { struct TreeNode *temp;
                      temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                      (yyval.node).token = "VarDec"; 
@@ -1694,7 +1695,7 @@ yyreduce:
   case 18:
 
 /* Line 1806 of yacc.c  */
-#line 138 "syntax.y"
+#line 139 "syntax.y"
     {  struct TreeNode *temp;
                                              temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
                                              temp = bindSibling(&(yyvsp[(3) - (4)].node), temp);
@@ -1707,7 +1708,7 @@ yyreduce:
   case 19:
 
 /* Line 1806 of yacc.c  */
-#line 146 "syntax.y"
+#line 147 "syntax.y"
     {  struct TreeNode *temp;
                                              temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
                                              temp = bindSibling(&(yyvsp[(3) - (4)].node), temp);
@@ -1720,7 +1721,7 @@ yyreduce:
   case 20:
 
 /* Line 1806 of yacc.c  */
-#line 153 "syntax.y"
+#line 154 "syntax.y"
     { struct TreeNode *temp;
                               temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                               temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1732,7 +1733,7 @@ yyreduce:
   case 21:
 
 /* Line 1806 of yacc.c  */
-#line 160 "syntax.y"
+#line 161 "syntax.y"
     { struct TreeNode *temp;
                               temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                               temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1744,7 +1745,7 @@ yyreduce:
   case 22:
 
 /* Line 1806 of yacc.c  */
-#line 166 "syntax.y"
+#line 167 "syntax.y"
     { struct TreeNode *temp;
                          temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                          (yyval.node).token = "VarList"; 
@@ -1754,7 +1755,7 @@ yyreduce:
   case 23:
 
 /* Line 1806 of yacc.c  */
-#line 171 "syntax.y"
+#line 172 "syntax.y"
     { struct TreeNode *temp;
                                     temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                     temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1765,7 +1766,7 @@ yyreduce:
   case 24:
 
 /* Line 1806 of yacc.c  */
-#line 178 "syntax.y"
+#line 179 "syntax.y"
     { 
                                             struct TreeNode *temp;
                                              temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
@@ -1779,7 +1780,7 @@ yyreduce:
   case 25:
 
 /* Line 1806 of yacc.c  */
-#line 188 "syntax.y"
+#line 189 "syntax.y"
     { struct TreeNode *temp;
                                     temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                     temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);// fuck: temp = bindSibling(&$1, &$1);
@@ -1790,14 +1791,14 @@ yyreduce:
   case 26:
 
 /* Line 1806 of yacc.c  */
-#line 193 "syntax.y"
+#line 194 "syntax.y"
     { (yyval.node).token = NULL; (yyval.node).nextSibling = NULL;  (yyval.node).firstChild = NULL; }
     break;
 
   case 27:
 
 /* Line 1806 of yacc.c  */
-#line 195 "syntax.y"
+#line 196 "syntax.y"
     { struct TreeNode *temp;
                             temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                             temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1809,7 +1810,7 @@ yyreduce:
   case 28:
 
 /* Line 1806 of yacc.c  */
-#line 201 "syntax.y"
+#line 202 "syntax.y"
     { struct TreeNode *temp;
                             temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                             (yyval.node).token = "Stmt";
@@ -1820,7 +1821,7 @@ yyreduce:
   case 29:
 
 /* Line 1806 of yacc.c  */
-#line 206 "syntax.y"
+#line 207 "syntax.y"
     {  struct TreeNode *temp;
                                              temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                              temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1832,7 +1833,7 @@ yyreduce:
   case 30:
 
 /* Line 1806 of yacc.c  */
-#line 213 "syntax.y"
+#line 214 "syntax.y"
     { 
                                              printf("---------------------IF----------------------\n");
                                              struct TreeNode *temp;
@@ -1849,7 +1850,7 @@ yyreduce:
   case 31:
 
 /* Line 1806 of yacc.c  */
-#line 224 "syntax.y"
+#line 225 "syntax.y"
     { 
                                             printf("----------if else ---------------\n");
                                              struct TreeNode *temp;
@@ -1868,7 +1869,7 @@ yyreduce:
   case 32:
 
 /* Line 1806 of yacc.c  */
-#line 237 "syntax.y"
+#line 238 "syntax.y"
     { 
                                             printf("---------------------While-------------------- \n");
                                              struct TreeNode *temp;
@@ -1884,7 +1885,7 @@ yyreduce:
   case 33:
 
 /* Line 1806 of yacc.c  */
-#line 248 "syntax.y"
+#line 249 "syntax.y"
     {  struct TreeNode *temp;
                                temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -1895,14 +1896,14 @@ yyreduce:
   case 34:
 
 /* Line 1806 of yacc.c  */
-#line 253 "syntax.y"
+#line 254 "syntax.y"
     { (yyval.node).token = NULL; (yyval.node).nextSibling = NULL;  (yyval.node).firstChild = NULL; }
     break;
 
   case 35:
 
 /* Line 1806 of yacc.c  */
-#line 257 "syntax.y"
+#line 258 "syntax.y"
     {  struct TreeNode *temp;
                                             temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                             temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1914,7 +1915,7 @@ yyreduce:
   case 36:
 
 /* Line 1806 of yacc.c  */
-#line 264 "syntax.y"
+#line 265 "syntax.y"
     {  struct TreeNode *temp;
                        temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                        (yyval.node).token = "DecList";
@@ -1924,7 +1925,7 @@ yyreduce:
   case 37:
 
 /* Line 1806 of yacc.c  */
-#line 268 "syntax.y"
+#line 269 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1936,7 +1937,7 @@ yyreduce:
   case 38:
 
 /* Line 1806 of yacc.c  */
-#line 275 "syntax.y"
+#line 276 "syntax.y"
     { struct TreeNode *temp;
                           temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                           (yyval.node).token = "Dec"; 
@@ -1946,7 +1947,7 @@ yyreduce:
   case 39:
 
 /* Line 1806 of yacc.c  */
-#line 279 "syntax.y"
+#line 280 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1958,7 +1959,7 @@ yyreduce:
   case 40:
 
 /* Line 1806 of yacc.c  */
-#line 287 "syntax.y"
+#line 288 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1970,7 +1971,7 @@ yyreduce:
   case 41:
 
 /* Line 1806 of yacc.c  */
-#line 293 "syntax.y"
+#line 294 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1982,7 +1983,7 @@ yyreduce:
   case 42:
 
 /* Line 1806 of yacc.c  */
-#line 299 "syntax.y"
+#line 300 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -1994,7 +1995,7 @@ yyreduce:
   case 43:
 
 /* Line 1806 of yacc.c  */
-#line 305 "syntax.y"
+#line 306 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2006,7 +2007,7 @@ yyreduce:
   case 44:
 
 /* Line 1806 of yacc.c  */
-#line 311 "syntax.y"
+#line 312 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2018,7 +2019,7 @@ yyreduce:
   case 45:
 
 /* Line 1806 of yacc.c  */
-#line 317 "syntax.y"
+#line 318 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2030,7 +2031,7 @@ yyreduce:
   case 46:
 
 /* Line 1806 of yacc.c  */
-#line 323 "syntax.y"
+#line 324 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2042,7 +2043,7 @@ yyreduce:
   case 47:
 
 /* Line 1806 of yacc.c  */
-#line 329 "syntax.y"
+#line 330 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2054,7 +2055,7 @@ yyreduce:
   case 48:
 
 /* Line 1806 of yacc.c  */
-#line 335 "syntax.y"
+#line 336 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2066,7 +2067,7 @@ yyreduce:
   case 49:
 
 /* Line 1806 of yacc.c  */
-#line 341 "syntax.y"
+#line 342 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -2077,7 +2078,7 @@ yyreduce:
   case 50:
 
 /* Line 1806 of yacc.c  */
-#line 346 "syntax.y"
+#line 347 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(1) - (2)].node), temp);
@@ -2088,7 +2089,7 @@ yyreduce:
   case 51:
 
 /* Line 1806 of yacc.c  */
-#line 351 "syntax.y"
+#line 352 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(3) - (4)].node), temp);
@@ -2101,7 +2102,7 @@ yyreduce:
   case 52:
 
 /* Line 1806 of yacc.c  */
-#line 358 "syntax.y"
+#line 359 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2113,7 +2114,7 @@ yyreduce:
   case 53:
 
 /* Line 1806 of yacc.c  */
-#line 364 "syntax.y"
+#line 365 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(3) - (4)].node), temp);
@@ -2126,7 +2127,7 @@ yyreduce:
   case 54:
 
 /* Line 1806 of yacc.c  */
-#line 371 "syntax.y"
+#line 372 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2138,7 +2139,7 @@ yyreduce:
   case 55:
 
 /* Line 1806 of yacc.c  */
-#line 377 "syntax.y"
+#line 378 "syntax.y"
     { struct TreeNode *temp;
                        temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                        (yyval.node).token = "Exp";
@@ -2148,7 +2149,7 @@ yyreduce:
   case 56:
 
 /* Line 1806 of yacc.c  */
-#line 381 "syntax.y"
+#line 382 "syntax.y"
     { struct TreeNode *temp;
                        temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                        (yyval.node).token = "Exp";
@@ -2158,7 +2159,7 @@ yyreduce:
   case 57:
 
 /* Line 1806 of yacc.c  */
-#line 385 "syntax.y"
+#line 386 "syntax.y"
     { struct TreeNode *temp;
                        temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                        (yyval.node).token = "Exp";
@@ -2168,7 +2169,7 @@ yyreduce:
   case 58:
 
 /* Line 1806 of yacc.c  */
-#line 390 "syntax.y"
+#line 391 "syntax.y"
     {    struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(3) - (3)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (3)].node), temp);
@@ -2180,7 +2181,7 @@ yyreduce:
   case 59:
 
 /* Line 1806 of yacc.c  */
-#line 396 "syntax.y"
+#line 397 "syntax.y"
     { struct TreeNode *temp;
                        temp = bindSibling(&(yyvsp[(1) - (1)].node), NULL);
                        (yyval.node).token = "Args";
@@ -2190,7 +2191,7 @@ yyreduce:
   case 60:
 
 /* Line 1806 of yacc.c  */
-#line 402 "syntax.y"
+#line 403 "syntax.y"
     { struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                         (yyval.node).token = "CompSt";
@@ -2200,7 +2201,7 @@ yyreduce:
   case 61:
 
 /* Line 1806 of yacc.c  */
-#line 407 "syntax.y"
+#line 408 "syntax.y"
     { struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(4) - (4)].node), NULL);
                                         temp = bindSibling(&(yyvsp[(2) - (4)].node), temp);
@@ -2212,7 +2213,7 @@ yyreduce:
   case 62:
 
 /* Line 1806 of yacc.c  */
-#line 413 "syntax.y"
+#line 414 "syntax.y"
     { struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                         (yyval.node).token = "Exp";
@@ -2222,7 +2223,7 @@ yyreduce:
   case 63:
 
 /* Line 1806 of yacc.c  */
-#line 418 "syntax.y"
+#line 419 "syntax.y"
     { struct TreeNode *temp;
                                         temp = bindSibling(&(yyvsp[(2) - (2)].node), NULL);
                                         (yyval.node).token = "Stmt";
@@ -2233,7 +2234,7 @@ yyreduce:
 
 
 /* Line 1806 of yacc.c  */
-#line 2237 "syntax.tab.c"
+#line 2238 "syntax.tab.c"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2464,7 +2465,7 @@ yyreturn:
 
 
 /* Line 2067 of yacc.c  */
-#line 424 "syntax.y"
+#line 425 "syntax.y"
 
 
 #include "lex.yy.c"

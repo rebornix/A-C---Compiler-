@@ -51,6 +51,7 @@ Program     :   ExtDefList  {   struct TreeNode *temp;
                                     printf("IRTraverse------\n");
                                     IRTraverse(temp);
                                     IROutput();
+                                    DROutput();
                                 }
                                 
                                 }

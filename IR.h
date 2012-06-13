@@ -68,3 +68,7 @@ InterCodes new_label_code(Operand);
 Operand new_temp();
 InterCodes new_place_code(Operand, int);
 InterCodes arrayAddress(struct TreeNode *Exp, Operand place, Operand pos, Type arrayType);
+
+void DROutput();
+int getVarCount();
+int getTempCount();
