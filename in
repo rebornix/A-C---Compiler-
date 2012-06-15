@@ -1,1 +1,9 @@
-test/test1.cmm
+int main()
+{
+    int c;
+    int a[10];
+    int b;
+    a[0] = 1;
+    b = a[0];
+    write(b);
+}

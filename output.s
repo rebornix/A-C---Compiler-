@@ -21,45 +21,25 @@ write:
 	jr $ra
 
 
-fib:
-	addi $sp, $sp, -56
-	sw $a0, 32($sp)
-	lw $t1, 0($sp)
-	lw $t2, 32($sp)
-	move $t1, $t2
-	sw $t1, 0($sp)
-	sw $t2, 32($sp)
-	lw $t1, 0($sp)
-	move $v0, $t1
-	jr $ra
-
 main:
-	addi $sp, $sp, -56
-	lw $t1, 8($sp)
-	li $t1, 3
+	addi $sp, $sp, -52
+	addi $t1, $t2, 0
 	sw $t1, 8($sp)
-	lw $t1, 36($sp)
+	lw $t1, 0($sp)
 	lw $t2, 8($sp)
 	move $t1, $t2
-	sw $t1, 36($sp)
+	sw $t1, 0($sp)
 	sw $t2, 8($sp)
 	lw $t1, 4($sp)
-	lw $t2, 36($sp)
-	move $t1, $t2
+	li $t1, 1
 	sw $t1, 4($sp)
-	sw $t2, 36($sp)
-	lw $t1, 20($sp)
-	li $t1, 3
+	addi $t1, $t2, 0
 	sw $t1, 20($sp)
-	lw $t1, 20($sp)
-	move $a0, $t1
-	addi $sp, $sp, -4
-	sw, $ra 0($sp)
-	jal fib
-	move $t1, $v0
+	lw $t1, 16($sp)
+	lw $t2, 20($sp)
+	move $t1, $t2
 	sw $t1, 16($sp)
-	lw $ra, 0($sp)
-	addi $sp, $sp, 4
+	sw $t2, 20($sp)
 	lw $t1, 36($sp)
 	lw $t2, 16($sp)
 	move $t1, $t2
@@ -82,9 +62,3 @@ main:
 	jal write
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
-	lw $t1, 28($sp)
-	li $t1, 0
-	sw $t1, 28($sp)
-	lw $t1, 28($sp)
-	move $v0, $t1
-	jr $ra

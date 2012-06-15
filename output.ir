@@ -1,17 +1,13 @@
-FUNCTION fib :
-PARAM v1
-t1 := v1
-RETURN t1
 FUNCTION main :
-t3 := #3
-v2 := t3
-t2 := v2
-t6 := #3
-ARG t6
-t5 := CALL fib
-v2 := t5
-t4 := v2
-t7 := v2
+DEC v2 40
+t3 := &v2 + #0
+t1 := t3
+t2 := #1
+*t1 := t2
+DEC v2 40
+t6 := &v2 + #0
+t5 := t6
+v3 := t5
+t4 := v3
+t7 := v3
 WRITE t7
-t8 := #0
-RETURN t8

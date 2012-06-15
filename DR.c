@@ -6,6 +6,84 @@ FILE *dp;
 int TEMPCOUNT;
 int VARCOUNT;
 
+typedef struct MemAlloc_* MemAlloc;
+struct MemAlloc_ {
+    int varCount;
+    int space;
+    MemAlloc next;
+};
+MemAlloc memAlloc;
+void MemStack()
+{
+    SyntaxNode itr = syntax_table;
+    int num = 1;
+    MemAlloc trace;
+    while( itr != NULL ){
+        printf("%s\n", itr->name);
+        if( memAlloc == NULL ){
+            if( itr->kind == variable ){
+                printf("variable: %s\n", itr->name);
+                memAlloc = (MemAlloc)malloc(sizeof(struct MemAlloc_));
+                memAlloc->varCount = num;
+                num++;
+                Type type = itr->u.type;
+                printf("type : %d\n", type->kind);
+                if( type->kind == basic ){
+                    memAlloc->space = 4;
+                }
+                else if( type->kind == array ){
+                    printf("array\n");
+                    Type elem = type->u.array.elem;
+                    if( elem->kind == basic ){
+                        printf("array size: %d\n", type->u.array.size);
+                        memAlloc->space = 4 * type->u.array.size;
+                    }
+                }
+                memAlloc->next = NULL;
+                trace = memAlloc;
+            }
+        }
+        else {
+            if( itr->kind == variable ){
+                MemAlloc temp = (MemAlloc)malloc(sizeof(struct MemAlloc_));
+                temp->varCount = num;
+                num++;
+                Type type = itr->u.type;
+                if( type->kind == basic ){
+                    temp->space = 4;
+                }
+                else if( type->kind == array ){
+                    Type elem = type->u.array.elem;
+                    if( elem->kind == basic ){
+                        temp->space = 4 * type->u.array.size;
+                    }
+                }
+                temp->next = NULL;
+                trace->next = temp;
+                trace = temp;
+            }
+        }
+        itr = itr->next;
+    }
+    MemAlloc it = memAlloc;
+    printf("********************* *******************\n");
+    while( it != NULL ){
+        printf("%d: %d\n", it->varCount, it->space);
+        it = it->next;
+    }
+}
+int getMemUse(int varCount)
+{
+    MemAlloc it = memAlloc;
+    int space = 0;
+    while( it != NULL ){
+        if( it->varCount == varCount )
+            break;
+        space = space + it->space;
+        it = it->next;
+    }
+    return space;
+}
 void HeadOutput()
 {
     fputs(".data\n",dp);
@@ -59,6 +137,7 @@ void ReturnDC(InterCodes itc)
     Operand op = itc->code->u.returnop.op;
     fprintf(dp, "\tlw $t1, %d($sp)\n", (op->u.temp_no-1)*4);
     fputs("\tmove $v0, $t1\n",dp);
+    fprintf(dp, "\taddi $sp, $sp, %d\n", (TEMPCOUNT+VARCOUNT)*4);
     fputs("\tjr $ra\n", dp);
 }
 void FunctionDC(InterCodes itc)
@@ -273,9 +352,6 @@ void LabelCodeDC(InterCodes itc)
 {
     Operand label = itc->code->u.labelcode.label;
     fprintf(dp, "label%d:\n", label->u.label_no);
-
-    fprintf(dp, "\tlw $t1, %d($sp)\n", (label->u.temp_no-1)*4);
-    fputs("\t$t1, $v0\n", dp);
 }
 void CallFuncDC(InterCodes itc)
 {
@@ -309,16 +385,19 @@ void CallFuncDC(InterCodes itc)
     fputs("\taddi $sp, $sp, -4\n", dp);
     fputs("\tsw, $ra 0($sp)\n", dp);
     /*
-     * call func, and save the return value to the lvalue
+     * call func 
      */
     fprintf(dp, "\tjal %s\n", itc->code->u.callfunc.name);
     fputs("\tmove $t1, $v0\n", dp);
-    fprintf(dp, "\tsw $t1, %d($sp)\n", (place->u.temp_no-1)*4);
     /*
      * restore context
      */
     fputs("\tlw $ra, 0($sp)\n", dp);
     fputs("\taddi $sp, $sp, 4\n", dp);
+    /*
+     * save the return value to the lvalue
+     */
+    fprintf(dp, "\tsw $t1, %d($sp)\n", (place->u.temp_no-1)*4);
 
 }
 void DROutput()
@@ -326,6 +405,8 @@ void DROutput()
     dp = fopen("output.s", "w+");
     TEMPCOUNT = getTempCount();
     VARCOUNT = getVarCount();
+    memAlloc = NULL;
+    MemStack();
     HeadOutput();
     ReadFuncOutput();
     WriteFuncOutput();
